@@ -1,0 +1,71 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Stabilize WhatsApp subscription form product loading by using backend Product.id and deterministic React Query UX",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Ensure Home page package selection always uses a real backend Product.id (not UI list index) when opening PreWhatsAppContactForm.",
+      "acceptanceCriteria": [
+        "Clicking “Subscribe via WhatsApp” from any package card results in PreWhatsAppContactForm calling useGetProduct() with an id that exists in the backend products map.",
+        "PreWhatsAppContactForm no longer shows the “Package could not be loaded” state due to passing an incorrect id derived from the UI list index.",
+        "The selected package name/price displayed in the form matches the backend product that will be submitted (same id/name/price)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/productCatalog.ts",
+          "operation": "create",
+          "description": "Add a small frontend-only catalog/lookup that maps known backend product names to UI metadata (e.g., speed label, icon, gradient color) so HomePage can render backend products while keeping the current visual presentation."
+        },
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Replace the UI-index-based package selection with backend-backed product selection: fetch products via useGetAllProducts(), render cards from backend Product objects (id/name/price), merge UI metadata via productCatalog lookup, and pass the backend Product.id (bigint) into PreWhatsAppContactForm along with backend name/price to guarantee correct mapping."
+        },
+        {
+          "path": "frontend/src/components/PreWhatsAppContactForm.tsx",
+          "operation": "modify",
+          "description": "Update props and internal usage so productId is treated as the backend Product.id (bigint) end-to-end (including useGetProduct(productId) and submission payload), removing any remaining assumptions that productId is a UI index."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Add explicit product-loading UX, retry, and submission guarding so slow/failed product fetches don’t present as immediate failure or allow submit without a valid product.",
+      "acceptanceCriteria": [
+        "When the form opens, the UI shows a clear loading indicator for the selected package while the product query is in-flight (rather than immediately implying failure).",
+        "If fetching the product fails or returns null, the form shows a retry button that refetches the product query (without requiring the user to close/reopen the modal).",
+        "The primary submit button remains disabled until product data is successfully loaded and validated.",
+        "If product data is not loaded, the error message instructs the user to retry (not to close and reopen the form)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/PreWhatsAppContactForm.tsx",
+          "operation": "modify",
+          "description": "Implement a dedicated product lookup section/state in the modal: show a loading indicator while useGetProduct is in-flight, show an actionable error UI with a Retry button that calls refetch(), handle null product results as a recoverable state with retry guidance, and ensure submit remains disabled until product fetch succeeds and the loaded product is validated."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Configure React Query product fetching to use a bounded retry strategy and reliably surface fetch errors to the modal UI.",
+      "acceptanceCriteria": [
+        "Product fetching has a defined retry policy (e.g., limited retries with backoff) rather than relying on ambiguous default behavior.",
+        "When product fetching errors, the UI can display an error state and the user can trigger a refetch.",
+        "No console-only failures: product lookup failures are surfaced in the modal UI in a user-actionable way."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Update useGetProduct to use an explicit bounded retry strategy (limited retries with backoff) and ensure errors are exposed to callers via React Query state (error/isError/refetch), enabling deterministic UI handling in PreWhatsAppContactForm."
+        },
+        {
+          "path": "frontend/src/components/PreWhatsAppContactForm.tsx",
+          "operation": "modify",
+          "description": "Consume useGetProduct error/loading states (isLoading/isFetching/isError/error/refetch) to render a user-visible error state (not only console logging) and make the Retry flow deterministic and actionable."
+        }
+      ]
+    }
+  ]
+}

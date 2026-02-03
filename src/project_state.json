@@ -1,0 +1,342 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 9,
+  "summary": "MyRepublic Network Hub is an Internet Computer (ICP) dApp (Motoko backend + React/Tailwind frontend) for managing a referral/network-marketing style member program around MyRepublic internet packages. Users authenticate with Internet Identity, register as members, complete a detailed profile (including sponsor/referral Principal, Indonesian address details, KTP/NIK, WhatsApp, and bank account), view their network tree (downlines), track commission transactions and sponsor bonuses, and request withdrawals. Admins can manage products, view/export all members, inspect member details, view leaderboards, and process withdrawal requests. The backend enforces role-based access control and profile-completion/verification gates, stores purchases/contact-form submissions, and provides auxiliary mixins for blob storage lifecycle and HTTP outcalls.",
+  "existing_features": [
+    {
+      "id": "IF-1",
+      "title": "Internet Identity authentication (login/logout + persisted delegation)",
+      "synonyms": [
+        "II login",
+        "AuthClient integration"
+      ],
+      "description": "Provides an authentication context backed by Dfinity AuthClient, exposing identity, login/logout actions, and detailed login status flags; loads existing delegation on app startup and supports long-lived sessions.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-2",
+      "title": "Actor creation and canister initialization with access-control secret",
+      "synonyms": [
+        "useActor",
+        "_initializeAccessControlWithSecret"
+      ],
+      "description": "Creates an ICP canister actor (anonymous or authenticated) and initializes backend access control using a secret token sourced from the URL hash/session; invalidates and refetches dependent React Query data when the actor changes.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-3",
+      "title": "Role-based access control (admin/user/guest)",
+      "synonyms": [
+        "AccessControl",
+        "RBAC"
+      ],
+      "description": "Backend maintains a role map; first valid admin-token initializer can become admin; supports querying current role, checking admin status, and assigning roles (admin-only). Frontend consumes role to show/hide admin navigation and protect routes.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-4",
+      "title": "Route protection and role-gated pages",
+      "synonyms": [
+        "RouteGuard",
+        "protected routes"
+      ],
+      "description": "Frontend enforces authentication and optional admin role before rendering protected pages, showing user-friendly unauthorized messages and optionally redirecting on unauthorized admin access.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-5",
+      "title": "Member registration (basic)",
+      "synonyms": [
+        "Join flow",
+        "registerMember"
+      ],
+      "description": "Authenticated users can register as members using basic fields (name, contact). Backend creates a MemberProfile with incomplete status for regular users and complete/verified status for admins.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-6",
+      "title": "Profile completion workflow with validation and Indonesian address helpers",
+      "synonyms": [
+        "ProfileSetupModal",
+        "saveCallerUserProfile"
+      ],
+      "description": "After registration, non-admin users are prompted to complete a sealed profile including sponsor Principal, unique NIK KTP, birth info, WhatsApp number, bank account, and address data. UI includes mocked Indonesian provinces/cities/postal codes and auto-constructs full address and domicile address.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-7",
+      "title": "Sponsor/referral linkage and NIK uniqueness enforcement",
+      "synonyms": [
+        "sponsorId referral",
+        "KTP uniqueness"
+      ],
+      "description": "Backend requires a valid non-anonymous sponsor Principal that already exists in member profiles, and enforces uniqueness of NIK KTP across existing profiles and pending membership requests.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-8",
+      "title": "Profile completeness and verification gating",
+      "synonyms": [
+        "isProfileComplete",
+        "subscriptionsVerified gate"
+      ],
+      "description": "Backend restricts access to key features based on role, profile completion, and a subscriptionsVerified flag. Frontend displays verification badges/alerts and auto-opens the profile completion modal when incomplete (non-admin).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-9",
+      "title": "Product catalog and admin product management",
+      "synonyms": [
+        "Products",
+        "addProduct",
+        "initializeDefaultInternetPackages"
+      ],
+      "description": "Backend stores products (internet packages) with price and commission rate, supports fetching single/all products, and allows admins to add products and initialize default MyRepublic packages. Frontend displays package cards and admin product management UI.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-10",
+      "title": "Subscription/contact initiation via pre-WhatsApp form with geolocation",
+      "synonyms": [
+        "PreWhatsAppContactForm",
+        "submitPreWhatsAppContactForm"
+      ],
+      "description": "Users fill a subscription/contact form that captures customer details, GPS coordinates, and a product ID; submission is recorded on-chain and then a pre-filled WhatsApp chat to the admin number is opened. The frontend validates product details by fetching the product from the backend to prevent mismatches.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-11",
+      "title": "Purchase recording and commission distribution to uplines",
+      "synonyms": [
+        "processPurchaseWithCommissions",
+        "upline commissions"
+      ],
+      "description": "Backend can create a purchase (pending) and distribute commissions up the sponsor chain using level-based basis-point rates, plus a separate sponsor bonus. Purchase processing also marks the seller as subscriptionsVerified.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-12",
+      "title": "Transactions ledger (commission + sponsor bonus) retrieval and display",
+      "synonyms": [
+        "getTransactions",
+        "commission history"
+      ],
+      "description": "Backend records commission transactions for uplines (commissionAmount) and sponsor bonuses (sponsorBonus) and allows member/admin retrieval (with authorization). Frontend shows recent transactions and computes totals and breakdowns.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-13",
+      "title": "Network/family tree generation and visualization",
+      "synonyms": [
+        "getFamilyTree",
+        "downlines tree"
+      ],
+      "description": "Backend builds a recursive FamilyTreeNode structure based on sponsor relationships. Frontend renders the tree on a canvas with level color-coding and shows network stats (e.g., direct downlines).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-14",
+      "title": "Withdrawals: member requests + admin processing workflow",
+      "synonyms": [
+        "requestWithdrawal",
+        "approve/reject/paid"
+      ],
+      "description": "Members can request withdrawals (with balance checks and bank account requirement). Admins can list all/pending withdrawals and approve, reject, or mark approved withdrawals as paid. Frontend provides a member withdrawal modal that also opens WhatsApp to contact admin and an admin dashboard tab to process requests.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-15",
+      "title": "Withdrawal summary and history",
+      "synonyms": [
+        "getMemberWithdrawalSummary",
+        "getMemberWithdrawals"
+      ],
+      "description": "Backend computes a per-member summary (available balance, totals by withdrawal status) and per-member withdrawal history with authorization checks. Frontend uses these to display available balance and recent withdrawal records.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-16",
+      "title": "Leaderboards (sales volume and downline count)",
+      "synonyms": [
+        "getLeaderboard",
+        "rankings"
+      ],
+      "description": "Backend computes leaderboard entries for sales volume (from salesRecords) and direct downline count (from sponsor relationships). Frontend admin dashboard displays top entries for both categories.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-17",
+      "title": "Admin member management and export",
+      "synonyms": [
+        "getAllMembers",
+        "CSV export",
+        "member inspection"
+      ],
+      "description": "Admins can fetch all member profiles, search/filter/sort/paginate them in the UI, export member data to CSV, and open a member detail modal for deeper inspection.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-18",
+      "title": "Membership requests and admin approval/rejection (backend)",
+      "synonyms": [
+        "submitMembershipRequest",
+        "approveMembershipRequest"
+      ],
+      "description": "Backend supports creating membership requests (requires verified member), and admin approval/rejection of requests. (UI integration is not clearly present in provided frontend files, but endpoints and state are implemented.)",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-19",
+      "title": "Achievements tracking (backend)",
+      "synonyms": [
+        "recordAchievement",
+        "getAchievements"
+      ],
+      "description": "Members can record achievements with timestamps; achievements can be queried by the owning member or admins.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-20",
+      "title": "Blob storage lifecycle and gateway authorization mixin (backend utility)",
+      "synonyms": [
+        "caffeine storage mixin",
+        "blob GC"
+      ],
+      "description": "Includes canister endpoints for managing storage gateway principals, listing dead blobs, confirming deletions and triggering GC, and cashier cycle refills; designed for integration with a storage gateway/cashier canister.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-21",
+      "title": "HTTP outcalls helper (backend utility)",
+      "synonyms": [
+        "http_request wrapper",
+        "transform"
+      ],
+      "description": "Provides reusable GET/POST HTTP outcall helpers using the IC management canister, including a response transform that strips headers and a fixed cycles budget for requests.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-22",
+      "title": "Theme settings endpoint (backend)",
+      "synonyms": [
+        "getThemeSettings"
+      ],
+      "description": "Backend exposes a static theme configuration (purple theme) that can be used by clients for theming.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-23",
+      "title": "Recruiting/referral eligibility gated by verified subscription",
+      "synonyms": [
+        "subscriptionsVerified sponsor gate",
+        "verified-only sponsoring"
+      ],
+      "description": "Only members with subscriptionsVerified=true can be used as a valid sponsor/referral and/or submit membership/recruiting flows; backend validations reject unverified sponsors to prevent recruiting until a package subscription is verified.",
+      "reqIds": [
+        "AR-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-24",
+      "title": "Verified subscription (“Terverifikasi”) status badge in member UI",
+      "synonyms": [
+        "Terverifikasi badge",
+        "verified member status"
+      ],
+      "description": "Frontend surfaces a clear verified status indicator/badge once the member’s subscriptionsVerified flag is set (e.g., after successful purchase/subscription processing), making verification state visible across relevant screens.",
+      "reqIds": [
+        "AR-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-25",
+      "title": "Purchase modal UI implementation",
+      "synonyms": [
+        "PurchaseModal",
+        "purchase flow UI"
+      ],
+      "description": "Implements the previously-empty PurchaseModal component so purchases/subscriptions can be initiated/recorded via a functional UI rather than a placeholder component.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "feature-eliminate-productid-mismatches-by-ensuring-the-package-shown-on-the-home-page-maps-to-a-real-backend-product-id-and-always-pass-that-backend-product-id-into-prewhatsappcontactform-instead-of-using-the-ui-array-index-as-the-id",
+      "title": "Eliminate productId mismatches by ensuring the package shown on the Home page maps to a real backend Product id, and always pass that backend Product.id into PreWhatsAppContactForm (instead of using the UI array index as the id).",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-prewhatsappcontactform-resilient-to-slow-failed-product-fetching-by-adding-an-explicit-loading-state-for-product-lookup-a-user-visible-retry-action-that-triggers-a-refetch-and-preventing-form-submission-until-the-product-fetch-has-either-succeeded-or-the-user-has-selected-a-valid-product",
+      "title": "Make PreWhatsAppContactForm resilient to slow/failed product fetching by adding an explicit loading state for product lookup, a user-visible retry action that triggers a refetch, and preventing form submission until the product fetch has either succeeded or the user has selected a valid product.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-align-react-query-behavior-for-product-retrieval-with-the-desired-ux-by-configuring-usegetproduct-or-the-calling-component-to-use-a-bounded-retry-strategy-and-expose-errors-to-the-ui-so-the-retry-flow-is-actionable-and-deterministic",
+      "title": "Align React Query behavior for product retrieval with the desired UX by configuring useGetProduct (or the calling component) to use a bounded retry strategy and expose errors to the UI so the retry flow is actionable and deterministic.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [],
+  "architecturalNotes": [
+    "Frontend uses React + @tanstack/react-query with a dedicated hooks layer (useQueries.ts) to wrap all canister calls, with query-key based caching and targeted invalidation after mutations.",
+    "Internet Identity authentication is wrapped in a context provider (useInternetIdentity) that initializes AuthClient, persists delegation, and exposes login/logout state to the app.",
+    "Actor creation is centralized in useActor; it creates an anonymous actor when unauthenticated and an authenticated actor when logged in; it also initializes access control via _initializeAccessControlWithSecret using a secret token extracted from URL hash/session.",
+    "Role-based UI and routing are implemented via RouteGuard plus conditional navigation items (Header/BottomNav) that show the Admin tab only for admin users.",
+    "Backend (Motoko) uses mixins (MixinAuthorization, blob-storage/Mixin) to compose authorization and storage-related endpoints into the main actor.",
+    "Backend state is held in mo:core Map and List collections keyed primarily by Principal or Nat IDs (profiles, transactions, withdrawals, products, purchases, achievements, contact form submissions).",
+    "Access control is implemented with an AccessControl state map; the first caller providing the correct admin token becomes admin; others become users; admin-only operations are enforced via explicit validation helpers.",
+    "Backend includes upgrade migration support via (with migration = Migration.run) to evolve stored profile fields (adds subscriptionsVerified).",
+    "UI is built with Tailwind CSS + shadcn/ui-style components, with an extensive neon purple/gold theme and custom animations in tailwind.config.js and src/index.css.",
+    "Network visualization is a canvas-based renderer drawing a hierarchical tree from backend-provided FamilyTreeNode data.",
+    "Withdrawals follow a simple state machine (#Pending/#Approved/#Rejected/#Paid) with separate member and admin views.",
+    "WhatsApp is used as an external operational channel: subscription/contact and withdrawal flows open pre-filled WhatsApp chats after recording on-chain form submissions or withdrawal requests.",
+    "Backend contains an HTTP outcalls utility module (GET/POST with transform) and a blob storage gateway authorization/GC helper mixin, suggesting integration with ICP canister HTTP and storage tooling.",
+    "Introduced an onboarding stepper/hook layer (e.g., OnboardingStepper + useOnboardingSteps) to guide users through registration, profile completion, and verification-related steps, coordinating UI gates with backend profile/verification flags."
+  ],
+  "knownIssues": [
+    "Backend commission logic appears to credit upline commissions and sponsor bonuses but does not record a direct/personal sales commission for the seller in the transactions ledger (the UI and incentive descriptions emphasize personal sales). This may be a functional gap or mismatch between marketing copy and implementation.",
+    "backend/blob-storage/Storage.mo references env var \"CAFFFEINE_STORAGE_CASHIER_PRINCIPAL\" (note spelling with triple 'F'); if deployment uses a different spelling this will trap at runtime.",
+    "AccessControl.getUserRole traps with \"User is not registered\" for principals not yet initialized; the frontend mitigates this by calling _initializeAccessControlWithSecret when creating an authenticated actor, but any flow that queries role before initialization could trap.",
+    "NetworkTreeVisualization uses fixed layout constants (height=600, horizontal spacing=150) and may not scale/fit for large/wide networks (overflow, nodes off-screen).",
+    "Subscription/berlangganan form intermittently fails to load selected package data (shows: \"⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.\") and requires a robust fix (e.g., ensure selected productId is persisted/passed correctly, add retry + loading/error recovery, and prevent opening the form without a resolved product record)."
+  ],
+  "isFixRequest": true,
+  "gameProjectType": "none",
+  "projectName": "MyRepublic Network Hub",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0,
+  "requiresBackendChanges": false,
+  "requiresFrontendChanges": true
+}

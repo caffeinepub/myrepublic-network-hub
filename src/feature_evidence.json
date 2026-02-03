@@ -1,0 +1,71 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-eliminate-productid-mismatches-by-ensuring-the-package-shown-on-the-home-page-maps-to-a-real-backend-product-id-and-always-pass-that-backend-product-id-into-prewhatsappcontactform-instead-of-using-the-ui-array-index-as-the-id",
+      "featureTitle": "Eliminate productId mismatches by ensuring the package shown on the Home page maps to a real backend Product id, and always pass that backend Product.id into PreWhatsAppContactForm (instead of using the UI array index as the id).",
+      "files": [
+        "frontend/src/components/PreWhatsAppContactForm.tsx",
+        "frontend/src/lib/productCatalog.ts",
+        "frontend/src/pages/HomePage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "http-outcalls@3.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-make-prewhatsappcontactform-resilient-to-slow-failed-product-fetching-by-adding-an-explicit-loading-state-for-product-lookup-a-user-visible-retry-action-that-triggers-a-refetch-and-preventing-form-submission-until-the-product-fetch-has-either-succeeded-or-the-user-has-selected-a-valid-product",
+      "featureTitle": "Make PreWhatsAppContactForm resilient to slow/failed product fetching by adding an explicit loading state for product lookup, a user-visible retry action that triggers a refetch, and preventing form submission until the product fetch has either succeeded or the user has selected a valid product.",
+      "files": [
+        "frontend/src/components/PreWhatsAppContactForm.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "http-outcalls@3.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-align-react-query-behavior-for-product-retrieval-with-the-desired-ux-by-configuring-usegetproduct-or-the-calling-component-to-use-a-bounded-retry-strategy-and-expose-errors-to-the-ui-so-the-retry-flow-is-actionable-and-deterministic",
+      "featureTitle": "Align React Query behavior for product retrieval with the desired UX by configuring useGetProduct (or the calling component) to use a bounded retry strategy and expose errors to the UI so the retry flow is actionable and deterministic.",
+      "files": [
+        "frontend/src/components/PreWhatsAppContactForm.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "http-outcalls@3.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

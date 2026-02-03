@@ -1,0 +1,79 @@
+{
+  "kind": "build_request",
+  "title": "Fix intermittent “Package could not be loaded” in WhatsApp subscription form",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Eliminate productId mismatches by ensuring the package shown on the Home page maps to a real backend Product id, and always pass that backend Product.id into PreWhatsAppContactForm (instead of using the UI array index as the id).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6",
+          "msg-5"
+        ],
+        "quotes": [
+          "⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.",
+          "tolong perbaiki"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking “Subscribe via WhatsApp” from any package card results in PreWhatsAppContactForm calling useGetProduct() with an id that exists in the backend products map.",
+        "PreWhatsAppContactForm no longer shows the “Package could not be loaded” state due to passing an incorrect id derived from the UI list index.",
+        "The selected package name/price displayed in the form matches the backend product that will be submitted (same id/name/price)."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Make PreWhatsAppContactForm resilient to slow/failed product fetching by adding an explicit loading state for product lookup, a user-visible retry action that triggers a refetch, and preventing form submission until the product fetch has either succeeded or the user has selected a valid product.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini."
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the form opens, the UI shows a clear loading indicator for the selected package while the product query is in-flight (rather than immediately implying failure).",
+        "If fetching the product fails or returns null, the form shows a retry button that refetches the product query (without requiring the user to close/reopen the modal).",
+        "The primary submit button remains disabled until product data is successfully loaded and validated.",
+        "If product data is not loaded, the error message instructs the user to retry (not to close and reopen the form)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Align React Query behavior for product retrieval with the desired UX by configuring useGetProduct (or the calling component) to use a bounded retry strategy and expose errors to the UI so the retry flow is actionable and deterministic.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6",
+          "msg-5"
+        ],
+        "quotes": [
+          "⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.",
+          "tolong perbaiki"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Product fetching has a defined retry policy (e.g., limited retries with backoff) rather than relying on ambiguous default behavior.",
+        "When product fetching errors, the UI can display an error state and the user can trigger a refetch.",
+        "No console-only failures: product lookup failures are surfaced in the modal UI in a user-actionable way."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not edit any files under frontend/src/components/ui or any other path listed in frontend.immutablePaths.",
+    "Keep the backend as a single-actor Motoko canister; do not introduce additional backend services.",
+    "Do not add database dependencies or external services."
+  ],
+  "nonGoals": [
+    "Do not redesign unrelated pages or change the overall onboarding/verification logic.",
+    "Do not change backend product initialization policy (e.g., do not require admins to reinitialize products) unless strictly necessary for correctness."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}
