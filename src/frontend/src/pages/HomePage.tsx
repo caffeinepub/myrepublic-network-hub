@@ -4,33 +4,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Wifi, Sparkles, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useGetAllProducts, useBootstrapDefaultProducts } from '../hooks/useQueries';
+import { useGetCallerUserProfile, useGetAllProducts, useBootstrapDefaultProducts, useGetCurrentUserRole } from '../hooks/useQueries';
 import { getProductUIMetadata } from '../lib/productCatalog';
-import ProductDetailModal from '../components/ProductDetailModal';
 import PreWhatsAppContactForm from '../components/PreWhatsAppContactForm';
 import OnboardingStepper from '../components/OnboardingStepper';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import type { Product } from '@/backend';
+import { UserRole, type Product } from '@/backend';
+import type { PageType } from '../utils/clientRouting';
 
 interface HomePageProps {
-  onNavigate: (page: 'join' | 'dashboard' | 'home') => void;
+  onNavigate: (page: PageType) => void;
 }
 
 export default function HomePage({ onNavigate }: HomePageProps) {
   const { login, loginStatus, identity } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
+  const { data: userRole } = useGetCurrentUserRole();
   const { data: backendProducts, isLoading: productsLoading, error: productsError, refetch: refetchProducts } = useGetAllProducts();
   const { mutate: bootstrapProducts, isPending: bootstrapping, isError: bootstrapError } = useBootstrapDefaultProducts();
   
-  const [selectedProductForDetail, setSelectedProductForDetail] = useState<Product | null>(null);
-  const [selectedProductForSubscription, setSelectedProductForSubscription] = useState<Product | null>(null);
+  const [selectedProductForSubscription, setSelectedProductForSubscription] = useState<bigint | null>(null);
   const [bootstrapAttempted, setBootstrapAttempted] = useState(false);
   const bootstrapInProgress = useRef(false);
 
   const isAuthenticated = !!identity;
+  const isAdmin = userRole === UserRole.admin;
   const disabled = loginStatus === 'logging-in';
 
-  // Bootstrap products once when actor is ready and products are empty
+  // Bootstrap products only for admin when catalog is empty
   useEffect(() => {
     if (
       !bootstrapInProgress.current &&
@@ -38,7 +39,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       !productsLoading &&
       backendProducts !== undefined &&
       backendProducts.length === 0 &&
-      isAuthenticated
+      isAuthenticated &&
+      isAdmin
     ) {
       bootstrapInProgress.current = true;
       setBootstrapAttempted(true);
@@ -53,7 +55,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         },
       });
     }
-  }, [backendProducts, productsLoading, bootstrapAttempted, isAuthenticated, bootstrapProducts, refetchProducts]);
+  }, [backendProducts, productsLoading, bootstrapAttempted, isAuthenticated, isAdmin, bootstrapProducts, refetchProducts]);
 
   const handleGabung = async () => {
     if (!isAuthenticated) {
@@ -69,22 +71,17 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     }
   };
 
-  const handleRetryBootstrap = () => {
-    setBootstrapAttempted(false);
-    bootstrapInProgress.current = false;
+  const handleRetryProducts = () => {
+    refetchProducts();
   };
 
   const calculateCommission = (price: number, rate: number): number => {
     return Math.floor((price * rate) / 100);
   };
 
-  const handleCardClick = (product: Product) => {
-    setSelectedProductForDetail(product);
-  };
-
-  const handleSubscribeClick = (e: React.MouseEvent, product: Product) => {
-    e.stopPropagation(); // Prevent card click event
-    setSelectedProductForSubscription(product);
+  const handleSubscribeClick = (e: React.MouseEvent, productId: bigint) => {
+    e.stopPropagation();
+    setSelectedProductForSubscription(productId);
   };
 
   return (
@@ -172,29 +169,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           </p>
         </div>
         
-        {/* Bootstrap Error State */}
-        {bootstrapError && (
-          <Alert className="mb-6 border-red-300 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              <div className="flex items-center justify-between">
-                <span>Failed to initialize default packages. Please try again.</span>
-                <Button
-                  size="sm"
-                  onClick={handleRetryBootstrap}
-                  disabled={bootstrapping}
-                  className="ml-4 bg-red-600 hover:bg-red-700"
-                >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${bootstrapping ? 'animate-spin' : ''}`} />
-                  Retry
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
         {/* Products Fetch Error State */}
-        {productsError && !bootstrapError && (
+        {productsError && (
           <Alert className="mb-6 border-red-300 bg-red-50">
             <AlertCircle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800">
@@ -202,7 +178,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 <span>Failed to load packages. Please try again.</span>
                 <Button
                   size="sm"
-                  onClick={() => refetchProducts()}
+                  onClick={handleRetryProducts}
                   className="ml-4 bg-red-600 hover:bg-red-700"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
@@ -232,8 +208,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               return (
                 <Card 
                   key={product.id.toString()} 
-                  onClick={() => handleCardClick(product)}
-                  className="border-2 border-purple-300 dark:border-purple-700 hover:shadow-neon-purple transition-all hover:scale-105 duration-300 overflow-hidden glossy bg-gradient-to-br from-white to-purple-50 dark:from-gray-900 dark:to-purple-950 cursor-pointer"
+                  className="border-2 border-purple-300 dark:border-purple-700 hover:shadow-neon-purple transition-all hover:scale-105 duration-300 overflow-hidden glossy bg-gradient-to-br from-white to-purple-50 dark:from-gray-900 dark:to-purple-950"
                 >
                   <CardHeader className={`bg-gradient-to-br ${uiMetadata.color} text-white rounded-t-lg relative overflow-hidden pb-4`}>
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
@@ -276,83 +251,60 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                         <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shrink-0">
                           <span className="text-white text-xs">✓</span>
                         </div>
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">Internet Only</span>
-                      </div>
-                      <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 p-2 rounded-lg">
-                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shrink-0">
-                          <Sparkles className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">Gratis Instalasi</span>
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Upload = Download</span>
                       </div>
                       <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 p-2 rounded-lg">
                         <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shrink-0">
                           <span className="text-white text-xs">✓</span>
                         </div>
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">100% Fiber Optic</span>
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">100% Fiber Optic</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 p-2 rounded-lg">
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shrink-0">
+                          <span className="text-white text-xs">✓</span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Gratis Instalasi</span>
                       </div>
                     </div>
-
-                    {/* Subscribe Button */}
-                    <Button
-                      onClick={(e) => handleSubscribeClick(e, product)}
-                      className="w-full rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-5 shadow-neon-purple glossy"
+                    
+                    <Button 
+                      onClick={(e) => handleSubscribeClick(e, product.id)}
+                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 rounded-xl shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
                     >
-                      <SiWhatsapp className="w-4 h-4 mr-2" />
+                      <SiWhatsapp className="w-5 h-5" />
                       Subscribe via WhatsApp
                     </Button>
-
-                    <div className="text-center mt-3">
-                      <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
-                        Klik kartu untuk detail lengkap
-                      </p>
-                    </div>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              No packages available at the moment.
-            </p>
-          </div>
+          <Alert className="mb-6 border-blue-300 bg-blue-50">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <div className="flex items-center justify-between">
+                <span>No packages are available yet. Please contact an admin.</span>
+                <Button
+                  size="sm"
+                  onClick={handleRetryProducts}
+                  className="ml-4 bg-blue-600 hover:bg-blue-700"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
         )}
-        
-        <div className="text-center mt-10">
-          <Button 
-            size="lg" 
-            className="rounded-full px-10 py-6 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 hover:from-purple-700 hover:via-pink-700 hover:to-purple-800 text-white font-black shadow-neon-purple text-lg uppercase tracking-wide glossy pulse-glow"
-            onClick={handleGabung}
-            disabled={disabled}
-          >
-            Mulai Jual Paket Internet
-          </Button>
-        </div>
       </section>
 
-      {/* Product Detail Modal */}
-      {selectedProductForDetail && (
-        <ProductDetailModal
-          product={{
-            name: selectedProductForDetail.name,
-            speed: selectedProductForDetail.description,
-            price: Number(selectedProductForDetail.price),
-            commissionRate: Number(selectedProductForDetail.commissionRate),
-            icon: getProductUIMetadata(selectedProductForDetail.name).icon,
-            color: getProductUIMetadata(selectedProductForDetail.name).color,
-          }}
-          productId={Number(selectedProductForDetail.id)}
-          onClose={() => setSelectedProductForDetail(null)}
-        />
-      )}
-
-      {/* Pre-WhatsApp Contact Form */}
-      {selectedProductForSubscription && (
+      {/* Pre-WhatsApp Contact Form Modal */}
+      {selectedProductForSubscription !== null && (
         <PreWhatsAppContactForm
+          productId={selectedProductForSubscription}
           open={true}
           onClose={() => setSelectedProductForSubscription(null)}
-          productId={selectedProductForSubscription.id}
         />
       )}
     </div>

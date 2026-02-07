@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Remove all custom-domain configuration/behavior and use the default Caffeine URL (`https://myrepublic-tuk.caffeine.xyz`) as the only canonical URL.
+**Goal:** Restore product visibility and make the Admin dashboard reliably accessible after Internet Identity login, while ensuring direct URL navigation loads the correct page.
 
 **Planned changes:**
-- Update `frontend/index.html` to remove any pre-load canonical redirect script that forces `myrepubicnetwork.web.id`.
-- Update `frontend/index.html` to set the canonical link (`<link rel="canonical">`) and Open Graph `og:url` to `https://myrepublic-tuk.caffeine.xyz`.
-- Remove the IC custom domain allowlist by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer lists `myrepubicnetwork.web.id` / `www.myrepubicnetwork.web.id`).
-- Remove custom-domain documentation by deleting `frontend/docs/custom-domain.md` or replacing it with a brief note that only the default Caffeine URL is used.
+- Fix authenticated actor initialization so login and subsequent role/product queries work even when the `caffeineAdminToken` URL parameter is missing or empty, and ensure backend initialization does not trap when an empty secret is provided.
+- Sync internal page state with the browser URL so direct navigation to `/admin`, `/dashboard`, `/network`, `/join`, `/calculator`, and `/about` loads the intended page; in-app navigation updates the URL and Back/Forward works.
+- Prevent non-admin users from triggering product bootstrapping on Home; show an English empty-state when no products exist with a Retry that only refetches.
+- Make Admin entry behavior explicit: show the Admin tab reliably for admins, and show an English access-denied state for non-admins when accessing Admin (no blank screens), with English loading/guard text.
 
-**User-visible outcome:** The app can be opened on the default Caffeine URL or any gateway hostname without redirecting to `myrepubicnetwork.web.id`, and sharing/SEO metadata points to `https://myrepublic-tuk.caffeine.xyz`.
+**User-visible outcome:** Users can log in via Internet Identity and see products (or a clear empty-state) without silent failures; opening `/admin` and other routes directly loads the correct page, and Admin access is clearly shown for admins and clearly denied for non-admins.

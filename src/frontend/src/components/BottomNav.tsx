@@ -1,10 +1,11 @@
 import { Home, Network, Calculator, LayoutDashboard, UserPlus, Info, Shield } from 'lucide-react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { UserRole } from '../backend';
+import type { PageType } from '../utils/clientRouting';
 
 interface BottomNavProps {
   currentPage: string;
-  onNavigate: (page: 'home' | 'network' | 'calculator' | 'dashboard' | 'join' | 'about' | 'admin') => void;
+  onNavigate: (page: PageType) => void;
   userRole?: UserRole;
 }
 
@@ -14,17 +15,17 @@ export default function BottomNav({ currentPage, onNavigate, userRole }: BottomN
   const isAdmin = userRole === UserRole.admin;
 
   const navItems = [
-    { id: 'home', label: 'Beranda', icon: Home, authRequired: false },
-    { id: 'network', label: 'Jaringan', icon: Network, authRequired: true },
-    { id: 'calculator', label: 'Kalkulator', icon: Calculator, authRequired: false },
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, authRequired: true },
-    { id: 'join', label: 'Gabung', icon: UserPlus, authRequired: false },
-    { id: 'about', label: 'Tentang', icon: Info, authRequired: false },
+    { id: 'home' as PageType, label: 'Beranda', icon: Home, authRequired: false },
+    { id: 'network' as PageType, label: 'Jaringan', icon: Network, authRequired: true },
+    { id: 'calculator' as PageType, label: 'Kalkulator', icon: Calculator, authRequired: false },
+    { id: 'dashboard' as PageType, label: 'Dashboard', icon: LayoutDashboard, authRequired: true },
+    { id: 'join' as PageType, label: 'Gabung', icon: UserPlus, authRequired: false },
+    { id: 'about' as PageType, label: 'Tentang', icon: Info, authRequired: false },
   ];
 
-  // Add admin tab only for admin users
-  if (isAdmin) {
-    navItems.push({ id: 'admin', label: 'Admin', icon: Shield, authRequired: true });
+  // Add admin tab only for admin users when role is defined
+  if (isAdmin && userRole !== undefined) {
+    navItems.push({ id: 'admin' as PageType, label: 'Admin', icon: Shield, authRequired: true });
   }
 
   return (
@@ -39,7 +40,7 @@ export default function BottomNav({ currentPage, onNavigate, userRole }: BottomN
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id as any)}
+              onClick={() => onNavigate(item.id)}
               className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[50px] ${
                 isActive
                   ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-neon-purple scale-105'

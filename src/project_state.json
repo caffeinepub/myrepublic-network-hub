@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 21,
+  "projectStateVersion": 23,
   "summary": "MyRepublic Network Hub adalah dApp ICP (Motoko backend + React/Tailwind frontend) untuk program member/referral MyRepublic, termasuk autentikasi Internet Identity, registrasi & profil detail, visualisasi network tree, transaksi komisi/bonus, dan penarikan dana; admin mengelola produk, member, leaderboard, dan proses withdrawal. Arah bisnis diperbarui: skema komisi referral pembelian pertama menjadi 25% dari harga produk untuk referrer, dan member baru dapat langsung merekrut tanpa harus menunggu status verifikasi langganan. Scope domain direvisi: proyek TIDAK menggunakan custom domain dan tetap memakai link default https://myrepublic-tuk.caffeine.xyz (tanpa konfigurasi `ic-domains`, tanpa canonical redirect/OG URL custom, dan tanpa dokumentasi/steps domain ICP gateway).",
   "architectural_notes": [
     "Frontend uses React + @tanstack/react-query with a dedicated hooks layer (useQueries.ts) to wrap all canister calls, with query-key based caching and targeted invalidation after mutations.",
@@ -19,9 +19,10 @@
     "backend/blob-storage/Storage.mo references env var \"CAFFFEINE_STORAGE_CASHIER_PRINCIPAL\" (note spelling with triple 'F'); if deployment uses a different spelling this will trap at runtime.",
     "AccessControl.getUserRole traps with \"User is not registered\" for principals not yet initialized; the frontend mitigates this by calling _initializeAccessControlWithSecret when creating an authenticated actor, but any flow that queries role before initialization could trap.",
     "NetworkTreeVisualization uses fixed layout constants (height=600, horizontal spacing=150) and may not scale/fit for large/wide networks (overflow, nodes off-screen).",
-    "Form berlangganan masih kadang gagal memuat data paket/harga (muncul pesan: \"⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.\"), mengindikasikan fetch product/detail paket atau state pemilihan produk tidak konsisten/putus sehingga form tidak bisa menampilkan paket yang dipilih."
+    "Form berlangganan masih kadang gagal memuat data paket/harga (muncul pesan: \"⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.\"), mengindikasikan fetch product/detail paket atau state pemilihan produk tidak konsisten/putus sehingga form tidak bisa menampilkan paket yang dipilih.",
+    "After publishing v55, products and the Admin dashboard may not appear even after Internet Identity login; likely related to auth/role initialization (AccessControl) and/or product bootstrap/fetch flow causing UI to render as empty/non-admin."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "IF-1",
@@ -358,6 +359,30 @@
         "REQ-7"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-make-direct-url-navigation-work-by-syncing-the-internal-currentpage-state-with-the-browser-path-so-opening-admin-and-other-pages-loads-the-intended-page-instead-of-rendering-the-default-home-view",
+      "title": "Make direct URL navigation work by syncing the internal `currentPage` state with the browser path so opening `/admin` (and other pages) loads the intended page instead of rendering the default Home view.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-prevent-non-admin-users-from-auto-bootstrapping-products-on-the-home-page-only-admins-should-trigger-bootstrapdefaultinternetpackagesifempty-and-non-admins-should-see-a-clear-english-empty-state-when-there-are-no-products",
+      "title": "Prevent non-admin users from auto-bootstrapping products on the Home page; only admins should trigger `bootstrapDefaultInternetPackagesIfEmpty`, and non-admins should see a clear English empty-state when there are no products.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-admin-entry-point-is-visible-and-debuggable-when-a-user-is-an-admin-the-admin-tab-button-appears-reliably-when-a-user-is-not-an-admin-navigating-to-admin-shows-an-english-access-denied-message-instead-of-appearing-blank",
+      "title": "Ensure the Admin entry point is visible and debuggable: when a user is an admin, the Admin tab/button appears reliably; when a user is not an admin, navigating to Admin shows an English access-denied message instead of appearing blank.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -383,6 +408,14 @@
       "id": "AR-4",
       "summary": "Allow newly subscribed members to recruit immediately (remove/relax subscriptionsVerified gating for sponsoring/recruiting)",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Fix authenticated actor initialization so the app can always create an authenticated actor after Internet Identity login and queries (role/products) do not silently fail when the `caffeineAdminToken` URL parameter is missing or empty.",
+      "reqIds": [
+        "REQ-8"
+      ],
       "status": "pending"
     }
   ],

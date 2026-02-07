@@ -1,55 +1,89 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T05:15:15.995Z",
-  "summary": "REQ-5 appears implemented via updating frontend/index.html canonical and og:url to the default Caffeine URL and removing any visible custom-domain redirect script. REQ-6 and REQ-7 cannot be confirmed from the diff summary because the relevant file contents are not shown and the files were not deleted (only modified). The diff also includes substantial unrelated UI/feature work not requested in the BuildRequest.",
+  "generatedAt": "2026-02-07T07:11:01.760Z",
+  "summary": "REQ-9 and REQ-11 appear implemented via URL-synced client routing (pushState + popstate) and an English RouteGuard access-denied/loading UI, plus role-gated Admin tab visibility in Header/BottomNav. REQ-10 is partially evidenced: HomePage now restricts auto-bootstrap to admins, but the required non-admin empty-state English message is not clearly visible in the provided truncated diff. REQ-8 (backend: tolerate missing/empty caffeineAdminToken and do not trap on _initializeAccessControlWithSecret(\"\")) is not evidenced in the backend diff snippet.",
   "missing_requirements": [
     {
-      "id": "REQ-6",
-      "requirement": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`).",
-      "reason": "The diff indicates `frontend/public/.well-known/ic-domains` was modified, but the content is not included in the summary, so it's not verifiable that the file was deleted or that it no longer lists the custom domains.",
+      "id": "REQ-8",
+      "requirement": "Fix authenticated actor initialization so the app can always create an authenticated actor after Internet Identity login and queries (role/products) do not silently fail when the `caffeineAdminToken` URL parameter is missing or empty; backend must not trap on `_initializeAccessControlWithSecret(\"\")`.",
+      "reason": "The diff summary shows `backend/main.mo` modified but the provided truncated content does not include any changes related to access-control initialization, handling an empty secret, or preventing traps when the secret is missing/empty. No other backend/auth initialization changes are evidenced.",
       "evidence": [
-        "frontend/public/.well-known/ic-domains"
+        "backend/main.mo"
       ]
     },
     {
-      "id": "REQ-7",
-      "requirement": "Remove custom-domain documentation by deleting `frontend/docs/custom-domain.md` or replacing it with a brief note stating the project uses only `https://myrepublic-tuk.caffeine.xyz` and does not include ICP gateway registration/DNS steps.",
-      "reason": "`frontend/docs/custom-domain.md` is shown as modified (not deleted) and its updated contents are not provided, so it cannot be verified that custom-domain instructions were removed or replaced with the required brief note.",
+      "id": "REQ-10",
+      "requirement": "When products are empty for non-admin users, the UI shows a clear English empty-state indicating no packages are available yet and to contact an admin (and provides a Retry for refetch only).",
+      "reason": "HomePage changes clearly gate auto-bootstrap to admins, but the provided truncated HomePage diff does not explicitly show the required non-admin empty-state English message and Retry-only behavior; the file summary claims it, but the actual message/UI is not visible in the diff excerpt.",
       "evidence": [
-        "frontend/docs/custom-domain.md"
+        "frontend/src/pages/HomePage.tsx",
+        "frontend-file-summaries.txt"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Large-scale frontend feature/UI changes (routing, role-based protections, new profile completion modal workflow, new/changed pages, network visualization, purchase modal text changes, styling/theme overhaul, Tailwind config updates).",
-      "reason": "The BuildRequest only asks to remove custom-domain configuration/canonical behavior and related docs/allowlist; it explicitly says no backend changes required and does not request broad UI/feature redesigns.",
+      "description": "Large-scale visual/theme redesign (neon OKLCH color system, Tailwind palette extensions, new global animations/shadows) beyond minimal changes needed to fix routing/admin/products visibility.",
+      "reason": "Non-goal states not to redesign the entire UI theme beyond minimal fixes, but the diff summary indicates broad styling and theme updates.",
       "evidence": [
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js",
         "frontend-file-summaries.txt"
       ]
     },
     {
-      "description": "Added/changed React Query hooks including a mutation to bootstrap default products, and multiple page behaviors relying on default product bootstrapping.",
-      "reason": "Not requested by REQ-5/REQ-6/REQ-7; unrelated to removing custom domain configuration.",
+      "description": "Footer content/branding changes (\"MyRepublic MLM\" to \"MyRepublic Network Hub\", new futuristic gradient footer and attribution).",
+      "reason": "Not requested by any requirement (REQ-8..REQ-11) and appears unrelated to routing/admin/products bootstrap fixes.",
       "evidence": [
-        "frontend-file-summaries.txt (frontend/src/hooks/useQueries.ts, frontend/src/pages/HomePage.tsx, frontend/src/pages/AdminDashboardPage.tsx)"
+        "frontend/src/components/Footer.tsx",
+        "frontend-file-summaries.txt"
       ]
     },
     {
-      "description": "Project metadata/state update describing business logic and commission scheme changes and revised domain scope.",
-      "reason": "The BuildRequest does not request updating `project_state.json` or changing business/commission logic; only domain configuration/documentation changes were requested.",
+      "description": "Join page flow simplification (collect only basic info, new success/continuation prompt).",
+      "reason": "Not requested by REQ-8..REQ-11; may be product/UX scope creep beyond the stated goal.",
       "evidence": [
-        "project_state.json"
+        "frontend/src/pages/JoinPage.tsx",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Network page visual/content changes (removed network diagram image; interactive tree diagram changes).",
+      "reason": "Not requested by REQ-8..REQ-11 and unrelated to admin dashboard access/routing/products bootstrap issue.",
+      "evidence": [
+        "frontend/src/pages/NetworkPage.tsx",
+        "frontend/src/components/NetworkTreeVisualization.tsx",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Purchase modal text/terminology changes and success message updates (\"berlangganan\" terminology, bonus activation message).",
+      "reason": "Not requested by REQ-8..REQ-11; unrelated to routing/admin/products bootstrap/access control fixes.",
+      "evidence": [
+        "frontend/src/components/PurchaseModal.tsx",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "ProfileSetupModal expanded/comprehensive data collection and validation changes.",
+      "reason": "Not requested by REQ-8..REQ-11 and appears outside the scope of fixing missing products/admin dashboard after login.",
+      "evidence": [
+        "frontend/src/components/ProfileSetupModal.tsx",
+        "frontend-file-summaries.txt"
       ]
     }
   ],
-  "confidence": 0.68,
+  "confidence": 0.63,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/docs/custom-domain.md",
-    "frontend/index.html",
-    "frontend/public/.well-known/ic-domains",
+    "frontend/src/App.tsx",
+    "frontend/src/components/BottomNav.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/components/RouteGuard.tsx",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/utils/clientRouting.ts",
     "project_state.json"
   ]
 }

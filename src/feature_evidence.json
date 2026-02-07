@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-all-custom-domain-canonical-behavior-so-the-app-is-no-longer-tied-to-myrepubicnetwork-web-id-and-can-be-used-normally-on-the-default-url-https-myrepublic-tuk-caffeine-xyz-update-frontend-index-html-to-1-remove-the-pre-load-canonical-redirect-script-that-forces-myrepubicnetwork-web-id-and-2-set-the-link-rel-canonical-and-og-url-values-to-https-myrepublic-tuk-caffeine-xyz",
-      "featureTitle": "Remove all custom-domain canonical behavior so the app is no longer tied to `myrepubicnetwork.web.id` and can be used normally on the default URL `https://myrepublic-tuk.caffeine.xyz`. Update `frontend/index.html` to (1) remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and (2) set the `<link rel='canonical'>` and `og:url` values to `https://myrepublic-tuk.caffeine.xyz`.",
+      "featureId": "feature-make-direct-url-navigation-work-by-syncing-the-internal-currentpage-state-with-the-browser-path-so-opening-admin-and-other-pages-loads-the-intended-page-instead-of-rendering-the-default-home-view",
+      "featureTitle": "Make direct URL navigation work by syncing the internal `currentPage` state with the browser path so opening `/admin` (and other pages) loads the intended page instead of rendering the default Home view.",
       "files": [
-        "frontend/index.html"
+        "frontend/src/App.tsx",
+        "frontend/src/utils/clientRouting.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,15 +19,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-5"
+        "REQ-9"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-remove-the-ic-custom-domain-allowlist-file-for-myrepubicnetwork-web-id-by-deleting-frontend-public-well-known-ic-domains-or-ensuring-it-no-longer-includes-myrepubicnetwork-web-id-or-www-myrepubicnetwork-web-id-so-the-frontend-canister-is-not-configured-to-serve-that-custom-domain",
-      "featureTitle": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`) so the frontend canister is not configured to serve that custom domain.",
+      "featureId": "feature-prevent-non-admin-users-from-auto-bootstrapping-products-on-the-home-page-only-admins-should-trigger-bootstrapdefaultinternetpackagesifempty-and-non-admins-should-see-a-clear-english-empty-state-when-there-are-no-products",
+      "featureTitle": "Prevent non-admin users from auto-bootstrapping products on the Home page; only admins should trigger `bootstrapDefaultInternetPackagesIfEmpty`, and non-admins should see a clear English empty-state when there are no products.",
       "files": [
-        "frontend/public/.well-known/ic-domains"
+        "frontend/src/pages/HomePage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -39,15 +40,17 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-6"
+        "REQ-10"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-remove-custom-domain-documentation-from-the-repository-by-deleting-frontend-docs-custom-domain-md-or-replacing-it-with-a-brief-note-stating-the-project-uses-the-default-caffeine-url-only-https-myrepublic-tuk-caffeine-xyz",
-      "featureTitle": "Remove custom-domain documentation from the repository by deleting `frontend/docs/custom-domain.md` (or replacing it with a brief note stating the project uses the default Caffeine URL only: `https://myrepublic-tuk.caffeine.xyz`).",
+      "featureId": "feature-ensure-the-admin-entry-point-is-visible-and-debuggable-when-a-user-is-an-admin-the-admin-tab-button-appears-reliably-when-a-user-is-not-an-admin-navigating-to-admin-shows-an-english-access-denied-message-instead-of-appearing-blank",
+      "featureTitle": "Ensure the Admin entry point is visible and debuggable: when a user is an admin, the Admin tab/button appears reliably; when a user is not an admin, navigating to Admin shows an English access-denied message instead of appearing blank.",
       "files": [
-        "frontend/docs/custom-domain.md"
+        "frontend/src/App.tsx",
+        "frontend/src/components/BottomNav.tsx",
+        "frontend/src/components/RouteGuard.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -60,7 +63,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-7"
+        "REQ-11"
       ],
       "confidence": "high"
     }

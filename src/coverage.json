@@ -1,58 +1,81 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T05:15:15.998Z",
+  "generatedAt": "2026-02-07T07:11:01.763Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
+    "total": 4,
     "implemented": 3,
     "items": [
       {
-        "id": "REQ-5",
-        "summary": "Remove all custom-domain canonical behavior so the app is no longer tied to `myrepubicnetwork.web.id` and can be used normally on the default URL `https://myrepublic-tuk.caffeine.xyz`. Update `frontend/index.html` to (1) remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and (2) set the `<link rel='canonical'>` and `og:url` values to `https://myrepublic-tuk.caffeine.xyz`.",
+        "id": "REQ-10",
+        "summary": "Prevent non-admin users from auto-bootstrapping products on the Home page; only admins should trigger `bootstrapDefaultInternetPackagesIfEmpty`, and non-admins should see a clear English empty-state when there are no products.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/index.html"
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/pages/HomePage.tsx"
         ],
         "matchedFiles": [
-          "frontend/index.html"
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/pages/HomePage.tsx"
         ]
       },
       {
-        "id": "REQ-6",
-        "summary": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`) so the frontend canister is not configured to serve that custom domain.",
+        "id": "REQ-11",
+        "summary": "Ensure the Admin entry point is visible and debuggable: when a user is an admin, the Admin tab/button appears reliably; when a user is not an admin, navigating to Admin shows an English access-denied message instead of appearing blank.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/public/.well-known/ic-domains"
+          "frontend/src/App.tsx",
+          "frontend/src/components/RouteGuard.tsx",
+          "frontend/src/components/BottomNav.tsx"
         ],
         "matchedFiles": [
-          "frontend/public/.well-known/ic-domains"
+          "frontend/src/App.tsx",
+          "frontend/src/components/RouteGuard.tsx",
+          "frontend/src/components/BottomNav.tsx"
         ]
       },
       {
-        "id": "REQ-7",
-        "summary": "Remove custom-domain documentation from the repository by deleting `frontend/docs/custom-domain.md` (or replacing it with a brief note stating the project uses the default Caffeine URL only: `https://myrepublic-tuk.caffeine.xyz`).",
+        "id": "REQ-8",
+        "summary": "Fix authenticated actor initialization so the app can always create an authenticated actor after Internet Identity login and queries (role/products) do not silently fail when the `caffeineAdminToken` URL parameter is missing or empty.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Make direct URL navigation work by syncing the internal `currentPage` state with the browser path so opening `/admin` (and other pages) loads the intended page instead of rendering the default Home view.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/docs/custom-domain.md"
+          "frontend/src/utils/clientRouting.ts",
+          "frontend/src/App.tsx",
+          "frontend/src/App.tsx"
         ],
         "matchedFiles": [
-          "frontend/docs/custom-domain.md"
+          "frontend/src/utils/clientRouting.ts",
+          "frontend/src/App.tsx",
+          "frontend/src/App.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/docs/custom-domain.md",
-    "frontend/index.html",
-    "frontend/public/.well-known/ic-domains",
+    "frontend/src/App.tsx",
+    "frontend/src/components/BottomNav.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/components/RouteGuard.tsx",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/utils/clientRouting.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

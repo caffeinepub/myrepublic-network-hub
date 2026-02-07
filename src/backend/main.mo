@@ -200,21 +200,30 @@ actor {
   include MixinAuthorization(accessControlState);
 
   func validateCallerIsUser(caller : Principal) : () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Anonymous users cannot perform this action");
+    };
+
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only registered users can perform this action");
     };
   };
 
   func validateCallerIsAdmin(caller : Principal) : () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admin can perform this action");
     };
   };
 
   func validateCallerIsRegisteredMember(caller : Principal) : () {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Anonymous users cannot perform this action");
+    };
+
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only registered users can perform this action");
     };
+
     if (not memberProfiles.containsKey(caller)) {
       Runtime.trap("Unauthorized: Only registered members can perform this action");
     };

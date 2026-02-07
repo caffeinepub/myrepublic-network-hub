@@ -1,51 +1,83 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Remove custom domain configuration and use default Caffeine URL only",
+  "title": "Fix client-side routing, admin visibility, and product bootstrap behavior",
   "requirements": [
     {
-      "id": "REQ-5",
-      "summary": "Remove canonical redirect behavior tied to myrepubicnetwork.web.id and set canonical/og:url to the default Caffeine URL.",
+      "id": "REQ-9",
+      "summary": "Sync internal page state with browser path so direct URL navigation and Back/Forward work across all pages.",
       "acceptanceCriteria": [
-        "Opening the app on any hostname (e.g., an `*.icp0.io` gateway URL or the default Caffeine URL) does not redirect to `myrepubicnetwork.web.id`.",
-        "`frontend/index.html` canonical link equals `https://myrepublic-tuk.caffeine.xyz`.",
-        "`frontend/index.html` Open Graph `og:url` equals `https://myrepublic-tuk.caffeine.xyz`."
+        "Opening the app at `/admin` loads the Admin page flow (showing an access denied state if the user is not admin, rather than a blank/home page).",
+        "Opening the app at `/dashboard`, `/network`, `/join`, `/calculator`, and `/about` loads the corresponding page.",
+        "Using in-app navigation updates the browser URL (pushState) and browser Back/Forward navigates between pages correctly."
       ],
       "file_operations": [
         {
-          "path": "frontend/index.html",
+          "path": "frontend/src/utils/clientRouting.ts",
+          "operation": "create",
+          "description": "Add a small routing helper to map between browser paths (`/`, `/join`, `/network`, `/dashboard`, `/admin`, `/calculator`, `/about`) and the app's `currentPage` state, and provide safe wrappers for pushState + popstate handling."
+        },
+        {
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and update the `<link rel='canonical'>` and Open Graph `og:url` to `https://myrepublic-tuk.caffeine.xyz`."
+          "description": "Replace the purely in-memory `currentPage` navigation with URL-synced navigation: (1) initialize `currentPage` from `window.location.pathname` on first render, (2) update the URL via `history.pushState` when `handleNavigate` is used, and (3) listen to `popstate` to update `currentPage` when the user presses Back/Forward."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure any internal redirects that currently change `currentPage` (e.g., redirecting authenticated users without profile to `join`) also update the browser path using the same shared navigation helper, so refresh/direct navigation stays consistent."
         }
       ]
     },
     {
-      "id": "REQ-6",
-      "summary": "Remove IC custom domain allowlist configuration for myrepubicnetwork.web.id.",
+      "id": "REQ-10",
+      "summary": "Stop non-admin users from auto-bootstrapping products; show a clear English empty state with refetch-only retry.",
       "acceptanceCriteria": [
-        "The built frontend assets do not include an `/.well-known/ic-domains` file that lists `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`.",
-        "No project configuration remains that explicitly enables serving `myrepubicnetwork.web.id` via the IC gateway."
+        "When a non-admin user logs in and the product list is empty, the Home page does not automatically call the bootstrap mutation.",
+        "When products are empty for non-admin users, the UI shows an English message indicating no packages are available yet and to contact an admin (and provides a Retry for refetch only).",
+        "When an admin user logs in and the product list is empty, the Home page may bootstrap and then refetch so products appear without manual steps."
       ],
       "file_operations": [
         {
-          "path": "frontend/public/.well-known/ic-domains",
-          "operation": "delete",
-          "description": "Delete the IC custom domain allowlist file so it no longer enables `myrepubicnetwork.web.id` (or `www.myrepubicnetwork.web.id`) to be served by the frontend canister."
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Gate the existing auto-bootstrap `useEffect` so it only runs when the signed-in user is an admin (use the existing role query hook to determine admin vs non-admin)."
+        },
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Update the empty-products UI to a clear English empty state for non-admins (e.g., \"No packages are available yet. Please contact an admin.\") and provide a Retry action that only refetches products (does not call bootstrap)."
+        },
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Preserve the admin experience: when admin is logged in and products are empty, allow bootstrap then refetch so products can appear without manual steps."
         }
       ]
     },
     {
-      "id": "REQ-7",
-      "summary": "Remove custom-domain documentation from the repository or replace it with a default-URL-only note.",
+      "id": "REQ-11",
+      "summary": "Make the Admin entry point reliably visible for admins and show an English access-denied state for non-admins (no blank/redirect confusion).",
       "acceptanceCriteria": [
-        "There is no documentation instructing users to configure or register `myrepubicnetwork.web.id` for this project.",
-        "If any replacement documentation remains, it clearly states the app is used via `https://myrepublic-tuk.caffeine.xyz` and does not include ICP gateway registration/DNS steps."
+        "If `getCurrentUserRole` resolves to admin, the Admin tab is shown in the bottom navigation and the Admin page renders successfully.",
+        "If `getCurrentUserRole` resolves to non-admin, the Admin page shows an English access denied state (not a blank screen), and `onUnauthorized` behavior does not create a confusing empty page experience.",
+        "Any loading states introduced/modified for role checking or page guarding use English user-facing text."
       ],
       "file_operations": [
         {
-          "path": "frontend/docs/custom-domain.md",
-          "operation": "delete",
-          "description": "Delete the custom-domain setup documentation so the repository no longer instructs users to configure or register `myrepubicnetwork.web.id`."
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Remove the current admin `onUnauthorized` redirect behavior that forces navigation away from `/admin`, so non-admin users who navigate to Admin can see the access-denied UI instead of being bounced into another page."
+        },
+        {
+          "path": "frontend/src/components/RouteGuard.tsx",
+          "operation": "modify",
+          "description": "Make RouteGuard's user-facing loading/auth/authorization messages English, and avoid auto-calling `onUnauthorized` in a way that prevents the guard from rendering its own access-denied UI (keep `onUnauthorized` as an optional escape hatch, but ensure the default behavior shows a clear screen state). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/BottomNav.tsx",
+          "operation": "modify",
+          "description": "Ensure the Admin tab visibility remains strictly role-based (admin only) and is resilient to role-loading timing by relying on the resolved `userRole` value from the app (no assumptions when role is undefined)."
         }
       ]
     }

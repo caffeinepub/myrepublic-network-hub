@@ -16,22 +16,31 @@ import CalculatorPage from './pages/CalculatorPage';
 import AboutPage from './pages/AboutPage';
 import { useState, useEffect } from 'react';
 import { UserRole } from './backend';
+import { getPageFromPath, navigateToPage, setupPopstateListener, type PageType } from './utils/clientRouting';
 
 export default function App() {
   const { identity, isInitializing } = useInternetIdentity();
   const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
   const { data: userRole } = useGetCurrentUserRole();
   const { data: isProfileComplete, isLoading: profileCompleteLoading } = useIsProfileComplete();
-  const [currentPage, setCurrentPage] = useState<'home' | 'join' | 'network' | 'dashboard' | 'admin' | 'calculator' | 'about'>('home');
+  
+  // Initialize currentPage from URL
+  const [currentPage, setCurrentPage] = useState<PageType>(() => getPageFromPath(window.location.pathname));
   const [showProfileSetup, setShowProfileSetup] = useState(false);
 
   const isAuthenticated = !!identity;
   const isAdmin = userRole === UserRole.admin;
 
+  // Set up browser back/forward navigation
+  useEffect(() => {
+    const cleanup = setupPopstateListener(setCurrentPage);
+    return cleanup;
+  }, []);
+
   // Redirect authenticated users without profile to join page
   useEffect(() => {
     if (isAuthenticated && !profileLoading && isFetched && userProfile === null && currentPage !== 'join') {
-      setCurrentPage('join');
+      navigateToPage('join', setCurrentPage);
     }
   }, [isAuthenticated, profileLoading, isFetched, userProfile, currentPage]);
 
@@ -44,14 +53,9 @@ export default function App() {
     }
   }, [isAuthenticated, profileCompleteLoading, isProfileComplete, isAdmin]);
 
-  // Handle unauthorized access to admin page
-  const handleUnauthorizedAdmin = () => {
-    setCurrentPage('dashboard');
-  };
-
-  // Navigation handler that accepts all page types
-  const handleNavigate = (page: 'home' | 'join' | 'network' | 'dashboard' | 'admin' | 'calculator' | 'about') => {
-    setCurrentPage(page);
+  // Navigation handler that updates both state and URL
+  const handleNavigate = (page: PageType) => {
+    navigateToPage(page, setCurrentPage);
   };
 
   if (isInitializing) {
@@ -59,7 +63,7 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-pink-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4 shadow-neon-purple"></div>
-          <p className="text-gray-600 font-semibold">Memuat aplikasi...</p>
+          <p className="text-gray-600 font-semibold">Loading application...</p>
         </div>
       </div>
     );
@@ -84,7 +88,7 @@ export default function App() {
             </RouteGuard>
           )}
           {currentPage === 'admin' && (
-            <RouteGuard requiredRole="admin" onUnauthorized={handleUnauthorizedAdmin}>
+            <RouteGuard requiredRole="admin">
               <AdminDashboardPage />
             </RouteGuard>
           )}

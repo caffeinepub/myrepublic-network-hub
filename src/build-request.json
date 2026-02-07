@@ -1,83 +1,93 @@
 {
   "kind": "build_request",
-  "title": "Remove custom domain configuration and use default Caffeine URL only",
-  "priority": "normal",
+  "title": "Fix missing products and inaccessible Admin dashboard after login",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-5",
-      "text": "Remove all custom-domain canonical behavior so the app is no longer tied to `myrepubicnetwork.web.id` and can be used normally on the default URL `https://myrepublic-tuk.caffeine.xyz`. Update `frontend/index.html` to (1) remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and (2) set the `<link rel='canonical'>` and `og:url` values to `https://myrepublic-tuk.caffeine.xyz`.",
-      "target": "frontend",
+      "id": "REQ-8",
+      "text": "Fix authenticated actor initialization so the app can always create an authenticated actor after Internet Identity login and queries (role/products) do not silently fail when the `caffeineAdminToken` URL parameter is missing or empty.",
+      "target": "backend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "iya saya ingin proyek tanpa domain,  tetap memakai link default: https://myrepublic-tuk.caffeine.xyz"
+          "produk pada ga muncul dan dasboard admin juga tidak muncul",
+          "Saat kamu membuka aplikasi, apakah kamu sudah login Internet Identity tetapi produk tetap tidak muncul? ... 1, 2 dan 3"
         ]
       },
       "acceptanceCriteria": [
-        "Opening the app on any hostname (e.g., an `*.icp0.io` gateway URL or the default Caffeine URL) does not redirect to `myrepubicnetwork.web.id`.",
-        "`frontend/index.html` canonical link equals `https://myrepublic-tuk.caffeine.xyz`.",
-        "`frontend/index.html` Open Graph `og:url` equals `https://myrepublic-tuk.caffeine.xyz`."
+        "Logging in with Internet Identity works even when `caffeineAdminToken` is not present in the URL.",
+        "After login, `getCurrentUserRole` and `getAllProducts` calls succeed (no trap) for non-admin users.",
+        "If `_initializeAccessControlWithSecret(\"\")` is called by the frontend, the backend does not trap and the actor remains usable (it may simply not grant admin privileges)."
       ]
     },
     {
-      "id": "REQ-6",
-      "text": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`) so the frontend canister is not configured to serve that custom domain.",
+      "id": "REQ-9",
+      "text": "Make direct URL navigation work by syncing the internal `currentPage` state with the browser path so opening `/admin` (and other pages) loads the intended page instead of rendering the default Home view.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "iya saya ingin proyek tanpa domain,  tetap memakai link default: https://myrepublic-tuk.caffeine.xyz"
+          "Ketika buka /admin, apakah muncul halaman kosong, redirect ke halaman lain, atau error tertentu?"
         ]
       },
       "acceptanceCriteria": [
-        "The built frontend assets do not include an `/.well-known/ic-domains` file that lists `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`.",
-        "No project configuration remains that explicitly enables serving `myrepubicnetwork.web.id` via the IC gateway."
+        "Opening the app at `/admin` loads the Admin page flow (showing an access denied state if the user is not admin, rather than a blank/home page).",
+        "Opening the app at `/dashboard`, `/network`, `/join`, `/calculator`, and `/about` loads the corresponding page.",
+        "Using in-app navigation updates the browser URL (pushState) and browser Back/Forward navigates between pages correctly."
       ]
     },
     {
-      "id": "REQ-7",
-      "text": "Remove custom-domain documentation from the repository by deleting `frontend/docs/custom-domain.md` (or replacing it with a brief note stating the project uses the default Caffeine URL only: `https://myrepublic-tuk.caffeine.xyz`).",
+      "id": "REQ-10",
+      "text": "Prevent non-admin users from auto-bootstrapping products on the Home page; only admins should trigger `bootstrapDefaultInternetPackagesIfEmpty`, and non-admins should see a clear English empty-state when there are no products.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "iya saya ingin proyek tanpa domain,  tetap memakai link default: https://myrepublic-tuk.caffeine.xyz"
+          "produk pada ga muncul"
         ]
       },
       "acceptanceCriteria": [
-        "There is no documentation instructing users to configure or register `myrepubicnetwork.web.id` for this project.",
-        "If any replacement documentation remains, it clearly states the app is used via `https://myrepublic-tuk.caffeine.xyz` and does not include ICP gateway registration/DNS steps."
+        "When a non-admin user logs in and the product list is empty, the Home page does not automatically call the bootstrap mutation.",
+        "When products are empty for non-admin users, the UI shows an English message indicating no packages are available yet and to contact an admin (and provides a Retry for refetch only).",
+        "When an admin user logs in and the product list is empty, the Home page may bootstrap and then refetch so products appear without manual steps."
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "text": "Ensure the Admin entry point is visible and debuggable: when a user is an admin, the Admin tab/button appears reliably; when a user is not an admin, navigating to Admin shows an English access-denied message instead of appearing blank.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "dasboard admin juga tidak muncul"
+        ]
+      },
+      "acceptanceCriteria": [
+        "If `getCurrentUserRole` resolves to admin, the Admin tab is shown in the bottom navigation and the Admin page renders successfully.",
+        "If `getCurrentUserRole` resolves to non-admin, the Admin page shows an English access denied state (not a blank screen), and `onUnauthorized` behavior does not create a confusing empty page experience.",
+        "Any loading states introduced/modified for role checking or page guarding use English user-facing text."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under `frontend/src/components/ui` (compose components instead).",
-    "Do not edit immutable frontend paths listed in SYSTEM_CONTEXT (e.g., `frontend/src/hooks/useInternetIdentity.ts(x)`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`).",
-    "Backend remains single-actor; no backend changes are required for this request."
+    "Do not edit files under `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, or anything inside `frontend/src/components/ui` (compose instead).",
+    "Backend must remain a single-actor Motoko canister; do not introduce additional backend services."
   ],
   "nonGoals": [
-    "Do not change or reset Cloudflare/DNS settings (out of scope; user asked to change project configuration only).",
-    "Do not register or deregister domains with the ICP gateway (external action).",
-    "Do not delete or modify IC canisters or on-chain state."
+    "Implementing new authentication providers beyond Internet Identity.",
+    "Adding external databases or off-chain storage.",
+    "Redesigning the entire UI theme beyond the minimal changes needed to resolve products/admin visibility and routing issues."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }
