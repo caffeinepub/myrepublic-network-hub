@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, Sparkles, Loader2 } from 'lucide-react';
+import { Wifi, Sparkles, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useGetAllProducts } from '../hooks/useQueries';
+import { useGetCallerUserProfile, useGetAllProducts, useBootstrapDefaultProducts } from '../hooks/useQueries';
 import { getProductUIMetadata } from '../lib/productCatalog';
 import ProductDetailModal from '../components/ProductDetailModal';
 import PreWhatsAppContactForm from '../components/PreWhatsAppContactForm';
 import OnboardingStepper from '../components/OnboardingStepper';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Product } from '@/backend';
 
 interface HomePageProps {
@@ -18,13 +19,41 @@ interface HomePageProps {
 export default function HomePage({ onNavigate }: HomePageProps) {
   const { login, loginStatus, identity } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
-  const { data: backendProducts, isLoading: productsLoading } = useGetAllProducts();
+  const { data: backendProducts, isLoading: productsLoading, error: productsError, refetch: refetchProducts } = useGetAllProducts();
+  const { mutate: bootstrapProducts, isPending: bootstrapping, isError: bootstrapError } = useBootstrapDefaultProducts();
   
   const [selectedProductForDetail, setSelectedProductForDetail] = useState<Product | null>(null);
   const [selectedProductForSubscription, setSelectedProductForSubscription] = useState<Product | null>(null);
+  const [bootstrapAttempted, setBootstrapAttempted] = useState(false);
+  const bootstrapInProgress = useRef(false);
 
   const isAuthenticated = !!identity;
   const disabled = loginStatus === 'logging-in';
+
+  // Bootstrap products once when actor is ready and products are empty
+  useEffect(() => {
+    if (
+      !bootstrapInProgress.current &&
+      !bootstrapAttempted &&
+      !productsLoading &&
+      backendProducts !== undefined &&
+      backendProducts.length === 0 &&
+      isAuthenticated
+    ) {
+      bootstrapInProgress.current = true;
+      setBootstrapAttempted(true);
+      
+      bootstrapProducts(undefined, {
+        onSuccess: () => {
+          refetchProducts();
+          bootstrapInProgress.current = false;
+        },
+        onError: () => {
+          bootstrapInProgress.current = false;
+        },
+      });
+    }
+  }, [backendProducts, productsLoading, bootstrapAttempted, isAuthenticated, bootstrapProducts, refetchProducts]);
 
   const handleGabung = async () => {
     if (!isAuthenticated) {
@@ -38,6 +67,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     } else {
       onNavigate('dashboard');
     }
+  };
+
+  const handleRetryBootstrap = () => {
+    setBootstrapAttempted(false);
+    bootstrapInProgress.current = false;
   };
 
   const calculateCommission = (price: number, rate: number): number => {
@@ -138,11 +172,52 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           </p>
         </div>
         
-        {productsLoading ? (
+        {/* Bootstrap Error State */}
+        {bootstrapError && (
+          <Alert className="mb-6 border-red-300 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <div className="flex items-center justify-between">
+                <span>Failed to initialize default packages. Please try again.</span>
+                <Button
+                  size="sm"
+                  onClick={handleRetryBootstrap}
+                  disabled={bootstrapping}
+                  className="ml-4 bg-red-600 hover:bg-red-700"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${bootstrapping ? 'animate-spin' : ''}`} />
+                  Retry
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Products Fetch Error State */}
+        {productsError && !bootstrapError && (
+          <Alert className="mb-6 border-red-300 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <div className="flex items-center justify-between">
+                <span>Failed to load packages. Please try again.</span>
+                <Button
+                  size="sm"
+                  onClick={() => refetchProducts()}
+                  className="ml-4 bg-red-600 hover:bg-red-700"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {productsLoading || bootstrapping ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
             <p className="text-lg font-bold text-purple-700 dark:text-purple-300">
-              Loading packages...
+              {bootstrapping ? 'Initializing packages...' : 'Loading packages...'}
             </p>
           </div>
         ) : backendProducts && backendProducts.length > 0 ? (

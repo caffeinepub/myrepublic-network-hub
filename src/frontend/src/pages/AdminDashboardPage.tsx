@@ -1,9 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useIsCallerAdmin, useGetLeaderboard, useGetAllProducts, useAddProduct, useGetAllMembers, useGetAllWithdrawals, useApproveWithdrawal, useRejectWithdrawal, useMarkWithdrawalAsPaid } from '../hooks/useQueries';
+import { useIsCallerAdmin, useGetLeaderboard, useGetAllProducts, useAddProduct, useGetAllMembers, useGetAllWithdrawals, useApproveWithdrawal, useRejectWithdrawal, useMarkWithdrawalAsPaid, useBootstrapDefaultProducts } from '../hooks/useQueries';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, TrendingUp, Users, Package, Search, Download, ArrowDownToLine, Check, X, DollarSign, ShieldCheck } from 'lucide-react';
+import { Shield, TrendingUp, Users, Package, Search, Download, ArrowDownToLine, Check, X, DollarSign, ShieldCheck, Sparkles } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -21,13 +21,14 @@ export default function AdminDashboardPage() {
   const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
   const { data: salesLeaderboard } = useGetLeaderboard(Variant_DownlineCount_SalesVolume.SalesVolume);
   const { data: downlineLeaderboard } = useGetLeaderboard(Variant_DownlineCount_SalesVolume.DownlineCount);
-  const { data: products } = useGetAllProducts();
+  const { data: products, refetch: refetchProducts } = useGetAllProducts();
   const { data: allMembers, isLoading: membersLoading } = useGetAllMembers();
   const { data: allWithdrawals, isLoading: withdrawalsLoading } = useGetAllWithdrawals();
   const { mutate: addProduct, isPending: addingProduct } = useAddProduct();
   const { mutate: approveWithdrawal } = useApproveWithdrawal();
   const { mutate: rejectWithdrawal } = useRejectWithdrawal();
   const { mutate: markAsPaid } = useMarkWithdrawalAsPaid();
+  const { mutate: bootstrapProducts, isPending: bootstrapping } = useBootstrapDefaultProducts();
 
   const [productName, setProductName] = useState('');
   const [productDesc, setProductDesc] = useState('');
@@ -71,6 +72,14 @@ export default function AdminDashboardPage() {
         setProductCommission('');
         setProductExplanation('');
         setDialogOpen(false);
+      },
+    });
+  };
+
+  const handleBootstrapProducts = () => {
+    bootstrapProducts(undefined, {
+      onSuccess: () => {
+        refetchProducts();
       },
     });
   };
@@ -825,11 +834,21 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           ) : (
-            <Alert className="border-purple-200 bg-purple-50">
-              <AlertDescription className="text-purple-800">
-                Belum ada produk. Tambahkan produk untuk memulai.
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-4">
+              <Alert className="border-purple-200 bg-purple-50">
+                <AlertDescription className="text-purple-800">
+                  Belum ada produk. Tambahkan produk untuk memulai.
+                </AlertDescription>
+              </Alert>
+              <Button
+                onClick={handleBootstrapProducts}
+                disabled={bootstrapping}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-neon-purple"
+              >
+                <Sparkles className={`w-4 h-4 mr-2 ${bootstrapping ? 'animate-spin' : ''}`} />
+                {bootstrapping ? 'Initializing...' : 'Initialize default packages'}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -170,6 +170,7 @@ export interface _SERVICE {
   'approveMembershipRequest' : ActorMethod<[bigint], undefined>,
   'approveWithdrawal' : ActorMethod<[WithdrawalId], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'bootstrapDefaultInternetPackagesIfEmpty' : ActorMethod<[], bigint>,
   'createPurchase' : ActorMethod<[string, string, string, bigint], undefined>,
   'getAchievements' : ActorMethod<[MemberId], Array<Achievement>>,
   'getAllByStatus' : ActorMethod<[WithdrawalStatus], Array<Withdrawal>>,

@@ -1,7 +1,27 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
-  "summary": "MyRepublic Network Hub is an Internet Computer (ICP) dApp (Motoko backend + React/Tailwind frontend) for managing a referral/network-marketing style member program around MyRepublic internet packages. Users authenticate with Internet Identity, register as members, complete a detailed profile (including sponsor/referral Principal, Indonesian address details, KTP/NIK, WhatsApp, and bank account), view their network tree (downlines), track commission transactions and sponsor bonuses, and request withdrawals. Admins can manage products, view/export all members, inspect member details, view leaderboards, and process withdrawal requests. The backend enforces role-based access control and profile-completion/verification gates, stores purchases/contact-form submissions, and provides auxiliary mixins for blob storage lifecycle and HTTP outcalls.",
+  "projectStateVersion": 19,
+  "summary": "MyRepublic Network Hub adalah dApp ICP (Motoko backend + React/Tailwind frontend) untuk program member/referral MyRepublic, termasuk autentikasi Internet Identity, registrasi & profil detail, visualisasi network tree, transaksi komisi/bonus, dan penarikan dana; admin mengelola produk, member, leaderboard, dan proses withdrawal. Arah bisnis diperbarui: skema komisi referral pembelian pertama menjadi 25% dari harga produk untuk referrer, dan member baru dapat langsung merekrut tanpa harus menunggu status verifikasi langganan. Selain kebutuhan domain kustom, scope domain diperluas: mengaktifkan juga apex/root domain `myrepubicnetwork.web.id` (tanpa www) via `ic-domains`, redeploy, dan registrasi terpisah ke ICP gateway (POST).",
+  "architectural_notes": [
+    "Frontend uses React + @tanstack/react-query with a dedicated hooks layer (useQueries.ts) to wrap all canister calls, with query-key based caching and targeted invalidation after mutations.",
+    "Internet Identity authentication is wrapped in a context provider (useInternetIdentity) that initializes AuthClient, persists delegation, and exposes login/logout state to the app.",
+    "Actor creation is centralized in useActor; it creates an anonymous actor when unauthenticated and an authenticated actor when logged in; it also initializes access control via _initializeAccessControlWithSecret using a secret token extracted from URL hash/session.",
+    "Role-based UI and routing are implemented via RouteGuard plus conditional navigation items (Header/BottomNav) that show the Admin tab only for admin users.",
+    "Backend (Motoko) uses mixins (MixinAuthorization, blob-storage/Mixin) to compose authorization and storage-related endpoints into the main actor.",
+    "Backend state is held in mo:core Map and List collections keyed primarily by Principal or Nat IDs (profiles, transactions, withdrawals, products, purchases, achievements, contact form submissions).",
+    "Access control is implemented with an AccessControl state map; the first caller providing the correct admin token becomes admin; others become users; admin-only operations are enforced via explicit validation helpers.",
+    "Backend includes upgrade migration support via (with migration = Migration.run) to evolve stored profile fields (adds subscriptionsVerified).",
+    "UI is built with Tailwind CSS + shadcn/ui-style components, with an extensive neon purple/gold theme and custom animations in tailwind.config.js and src/index.css.",
+    "Network visualization is a canvas-based renderer drawing a hierarchical tree from backend-provided FamilyTreeNode data."
+  ],
+  "known_issues": [
+    "Backend commission logic appears to credit upline commissions and sponsor bonuses but does not record a direct/personal sales commission for the seller in the transactions ledger (the UI and incentive descriptions emphasize personal sales). This may be a functional gap or mismatch between marketing copy and implementation.",
+    "backend/blob-storage/Storage.mo references env var \"CAFFFEINE_STORAGE_CASHIER_PRINCIPAL\" (note spelling with triple 'F'); if deployment uses a different spelling this will trap at runtime.",
+    "AccessControl.getUserRole traps with \"User is not registered\" for principals not yet initialized; the frontend mitigates this by calling _initializeAccessControlWithSecret when creating an authenticated actor, but any flow that queries role before initialization could trap.",
+    "NetworkTreeVisualization uses fixed layout constants (height=600, horizontal spacing=150) and may not scale/fit for large/wide networks (overflow, nodes off-screen).",
+    "Form berlangganan masih kadang gagal memuat data paket/harga (muncul pesan: \"⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.\"), mengindikasikan fetch product/detail paket atau state pemilihan produk tidak konsisten/putus sehingga form tidak bisa menampilkan paket yang dipilih."
+  ],
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "IF-1",
@@ -284,59 +304,78 @@
       "version": 1
     },
     {
-      "id": "feature-eliminate-productid-mismatches-by-ensuring-the-package-shown-on-the-home-page-maps-to-a-real-backend-product-id-and-always-pass-that-backend-product-id-into-prewhatsappcontactform-instead-of-using-the-ui-array-index-as-the-id",
-      "title": "Eliminate productId mismatches by ensuring the package shown on the Home page maps to a real backend Product id, and always pass that backend Product.id into PreWhatsAppContactForm (instead of using the UI array index as the id).",
+      "id": "feature-ensure-the-frontend-consistently-treats-https-myrepubicnetwork-web-id-as-the-canonical-domain-by-a-keeping-frontend-index-html-canonical-open-graph-url-tags-pointing-to-https-myrepubicnetwork-web-id-and-b-adding-an-optional-runtime-canonical-redirect-so-that-when-the-app-is-opened-on-a-non-local-non-canonical-hostname-e-g-an-icp0-io-url-it-redirects-to-the-same-path-on-https-myrepubicnetwork-web-id",
+      "title": "Ensure the frontend consistently treats `https://myrepubicnetwork.web.id` as the canonical domain by (a) keeping `frontend/index.html` canonical + Open Graph URL tags pointing to `https://myrepubicnetwork.web.id`, and (b) adding an optional runtime canonical redirect so that when the app is opened on a non-local, non-canonical hostname (e.g., an `*.icp0.io` URL), it redirects to the same path on `https://myrepubicnetwork.web.id`.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-make-prewhatsappcontactform-resilient-to-slow-failed-product-fetching-by-adding-an-explicit-loading-state-for-product-lookup-a-user-visible-retry-action-that-triggers-a-refetch-and-preventing-form-submission-until-the-product-fetch-has-either-succeeded-or-the-user-has-selected-a-valid-product",
-      "title": "Make PreWhatsAppContactForm resilient to slow/failed product fetching by adding an explicit loading state for product lookup, a user-visible retry action that triggers a refetch, and preventing form submission until the product fetch has either succeeded or the user has selected a valid product.",
+      "id": "feature-add-a-repository-documentation-file-describing-how-to-connect-the-custom-domain-myrepubicnetwork-web-id-to-the-deployed-ic-frontend-canister-including-dns-records-to-set-expected-propagation-behavior-and-how-to-verify-the-domain-is-serving-the-correct-app-and-tls-certificate",
+      "title": "Add a repository documentation file describing how to connect the custom domain `myrepubicnetwork.web.id` to the deployed IC frontend canister, including DNS records to set, expected propagation behavior, and how to verify the domain is serving the correct app and TLS certificate.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-align-react-query-behavior-for-product-retrieval-with-the-desired-ux-by-configuring-usegetproduct-or-the-calling-component-to-use-a-bounded-retry-strategy-and-expose-errors-to-the-ui-so-the-retry-flow-is-actionable-and-deterministic",
-      "title": "Align React Query behavior for product retrieval with the desired UX by configuring useGetProduct (or the calling component) to use a bounded retry strategy and expose errors to the UI so the retry flow is actionable and deterministic.",
+      "id": "feature-add-an-ic-domains-allowlist-file-to-the-frontend-assets-so-the-deployed-frontend-canister-explicitly-serves-both-the-apex-and-www-hostnames-myrepubicnetwork-web-id-and-www-myrepubicnetwork-web-id-the-file-must-be-included-in-the-built-static-assets-so-it-is-available-from-the-frontend-canister-at-runtime",
+      "title": "Add an `ic-domains` allowlist file to the frontend assets so the deployed frontend canister explicitly serves both the apex and www hostnames: `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`. The file must be included in the built static assets so it is available from the frontend canister at runtime.",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-repository-documentation-to-include-the-exact-post-deploy-steps-required-to-activate-the-apex-root-custom-domain-on-the-icp-gateway-including-a-separate-post-registration-for-myrepubicnetwork-web-id-in-addition-to-any-existing-www-registration-and-explicitly-call-out-that-a-redeploy-is-required-after-updating-ic-domains",
+      "title": "Update repository documentation to include the exact post-deploy steps required to activate the apex/root custom domain on the ICP gateway, including a separate POST registration for `myrepubicnetwork.web.id` (in addition to any existing `www` registration), and explicitly call out that a redeploy is required after updating `ic-domains`.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
     }
   ],
-  "new_feature_requests": [],
-  "architecturalNotes": [
-    "Frontend uses React + @tanstack/react-query with a dedicated hooks layer (useQueries.ts) to wrap all canister calls, with query-key based caching and targeted invalidation after mutations.",
-    "Internet Identity authentication is wrapped in a context provider (useInternetIdentity) that initializes AuthClient, persists delegation, and exposes login/logout state to the app.",
-    "Actor creation is centralized in useActor; it creates an anonymous actor when unauthenticated and an authenticated actor when logged in; it also initializes access control via _initializeAccessControlWithSecret using a secret token extracted from URL hash/session.",
-    "Role-based UI and routing are implemented via RouteGuard plus conditional navigation items (Header/BottomNav) that show the Admin tab only for admin users.",
-    "Backend (Motoko) uses mixins (MixinAuthorization, blob-storage/Mixin) to compose authorization and storage-related endpoints into the main actor.",
-    "Backend state is held in mo:core Map and List collections keyed primarily by Principal or Nat IDs (profiles, transactions, withdrawals, products, purchases, achievements, contact form submissions).",
-    "Access control is implemented with an AccessControl state map; the first caller providing the correct admin token becomes admin; others become users; admin-only operations are enforced via explicit validation helpers.",
-    "Backend includes upgrade migration support via (with migration = Migration.run) to evolve stored profile fields (adds subscriptionsVerified).",
-    "UI is built with Tailwind CSS + shadcn/ui-style components, with an extensive neon purple/gold theme and custom animations in tailwind.config.js and src/index.css.",
-    "Network visualization is a canvas-based renderer drawing a hierarchical tree from backend-provided FamilyTreeNode data.",
-    "Withdrawals follow a simple state machine (#Pending/#Approved/#Rejected/#Paid) with separate member and admin views.",
-    "WhatsApp is used as an external operational channel: subscription/contact and withdrawal flows open pre-filled WhatsApp chats after recording on-chain form submissions or withdrawal requests.",
-    "Backend contains an HTTP outcalls utility module (GET/POST with transform) and a blob storage gateway authorization/GC helper mixin, suggesting integration with ICP canister HTTP and storage tooling.",
-    "Introduced an onboarding stepper/hook layer (e.g., OnboardingStepper + useOnboardingSteps) to guide users through registration, profile completion, and verification-related steps, coordinating UI gates with backend profile/verification flags."
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Implement/confirm recruiting/referral eligibility gating by verified subscription (subscriptionsVerified sponsor gate)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Surface verified subscription (“Terverifikasi”) status badge in member UI",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Update commission scheme: first-time subscription via a referrer grants the referrer 25% of product price",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Allow newly subscribed members to recruit immediately (remove/relax subscriptionsVerified gating for sponsoring/recruiting)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Configure custom domain myrepubicnetwork.web.id for the web app (DNS + SSL/TLS + redirect/canonical domain)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Enable apex/root domain `myrepubicnetwork.web.id` (tanpa www): add to `ic-domains`, redeploy, and register root domain via separate ICP gateway POST registration",
+      "reqIds": [],
+      "status": "pending"
+    }
   ],
-  "knownIssues": [
-    "Backend commission logic appears to credit upline commissions and sponsor bonuses but does not record a direct/personal sales commission for the seller in the transactions ledger (the UI and incentive descriptions emphasize personal sales). This may be a functional gap or mismatch between marketing copy and implementation.",
-    "backend/blob-storage/Storage.mo references env var \"CAFFFEINE_STORAGE_CASHIER_PRINCIPAL\" (note spelling with triple 'F'); if deployment uses a different spelling this will trap at runtime.",
-    "AccessControl.getUserRole traps with \"User is not registered\" for principals not yet initialized; the frontend mitigates this by calling _initializeAccessControlWithSecret when creating an authenticated actor, but any flow that queries role before initialization could trap.",
-    "NetworkTreeVisualization uses fixed layout constants (height=600, horizontal spacing=150) and may not scale/fit for large/wide networks (overflow, nodes off-screen).",
-    "Subscription/berlangganan form intermittently fails to load selected package data (shows: \"⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.\") and requires a robust fix (e.g., ensure selected productId is persisted/passed correctly, add retry + loading/error recovery, and prevent opening the form without a resolved product record)."
-  ],
-  "isFixRequest": true,
   "gameProjectType": "none",
   "projectName": "MyRepublic Network Hub",
   "clarification_mode": "instant",
-  "clarification_rounds": 0,
-  "requiresBackendChanges": false,
-  "requiresFrontendChanges": true
+  "clarification_rounds": 0
 }

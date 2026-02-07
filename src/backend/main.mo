@@ -9,8 +9,6 @@ import MixinStorage "blob-storage/Mixin";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-
-
 actor {
   include MixinStorage();
 
@@ -1188,6 +1186,45 @@ actor {
       products.add(currentProductId, product);
       currentProductId += 1;
     };
+  };
+
+  public shared ({ caller }) func bootstrapDefaultInternetPackagesIfEmpty() : async Nat {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Anonymous users cannot bootstrap products");
+    };
+
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can bootstrap products");
+    };
+
+    if (products.isEmpty()) {
+      let defaultPackages = [
+        { name = "NEO"; description = "100 Mbps"; price = 233_100; commissionRate = 25; explanation = "Komisi 25%" },
+        { name = "VELO"; description = "300 Mbps"; price = 277_500; commissionRate = 25; explanation = "Komisi 25%" },
+        { name = "NEXUS"; description = "400 Mbps"; price = 333_000; commissionRate = 25; explanation = "Komisi 25%" },
+        { name = "PRIME"; description = "500 Mbps"; price = 555_000; commissionRate = 25; explanation = "Komisi 25%" },
+        { name = "WONDER"; description = "750 Mbps"; price = 721_000; commissionRate = 25; explanation = "Komisi 25%" },
+        { name = "ULTRA"; description = "1 Gbps"; price = 943_500; commissionRate = 25; explanation = "Komisi 25%" },
+      ];
+
+      var newlyAddedCount = 0;
+      for (pkg in defaultPackages.values()) {
+        let product : Product = {
+          id = currentProductId;
+          name = pkg.name;
+          description = pkg.description;
+          price = pkg.price;
+          commissionRate = 25;
+          explanation = "Komisi: 25%";
+        };
+        products.add(currentProductId, product);
+        currentProductId += 1;
+        newlyAddedCount += 1;
+      };
+
+      return newlyAddedCount;
+    };
+    0;
   };
 
   public query ({ caller }) func getAllMembers() : async [(MemberId, MemberProfile)] {

@@ -526,3 +526,18 @@ export function useHasCompletedSubscription(memberId?: Principal) {
     enabled: !!actor && !!targetMemberId,
   });
 }
+
+export function useBootstrapDefaultProducts() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.bootstrapDefaultInternetPackagesIfEmpty();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}

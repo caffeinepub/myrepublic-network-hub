@@ -1,76 +1,54 @@
 {
   "kind": "build_request",
-  "title": "Fix intermittent “Package could not be loaded” in WhatsApp subscription form",
-  "priority": "high",
+  "title": "Enable apex custom domain by adding myrepubicnetwork.web.id to ic-domains and documenting redeploy + gateway registration",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Eliminate productId mismatches by ensuring the package shown on the Home page maps to a real backend Product id, and always pass that backend Product.id into PreWhatsAppContactForm (instead of using the UI array index as the id).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-6",
-          "msg-5"
-        ],
-        "quotes": [
-          "⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.",
-          "tolong perbaiki"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Clicking “Subscribe via WhatsApp” from any package card results in PreWhatsAppContactForm calling useGetProduct() with an id that exists in the backend products map.",
-        "PreWhatsAppContactForm no longer shows the “Package could not be loaded” state due to passing an incorrect id derived from the UI list index.",
-        "The selected package name/price displayed in the form matches the backend product that will be submitted (same id/name/price)."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Make PreWhatsAppContactForm resilient to slow/failed product fetching by adding an explicit loading state for product lookup, a user-visible retry action that triggers a refetch, and preventing form submission until the product fetch has either succeeded or the user has selected a valid product.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini."
-        ]
-      },
-      "acceptanceCriteria": [
-        "When the form opens, the UI shows a clear loading indicator for the selected package while the product query is in-flight (rather than immediately implying failure).",
-        "If fetching the product fails or returns null, the form shows a retry button that refetches the product query (without requiring the user to close/reopen the modal).",
-        "The primary submit button remains disabled until product data is successfully loaded and validated.",
-        "If product data is not loaded, the error message instructs the user to retry (not to close and reopen the form)."
-      ]
-    },
-    {
       "id": "REQ-3",
-      "text": "Align React Query behavior for product retrieval with the desired UX by configuring useGetProduct (or the calling component) to use a bounded retry strategy and expose errors to the UI so the retry flow is actionable and deterministic.",
+      "text": "Add an `ic-domains` allowlist file to the frontend assets so the deployed frontend canister explicitly serves both the apex and www hostnames: `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`. The file must be included in the built static assets so it is available from the frontend canister at runtime.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6",
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "⚠️ Paket tidak dapat dimuat. Harap tutup dan buka kembali formulir ini.",
-          "tolong perbaiki"
+          "Tambah myrepubicnetwork.web.id ke file ic-domains di canister"
         ]
       },
       "acceptanceCriteria": [
-        "Product fetching has a defined retry policy (e.g., limited retries with backoff) rather than relying on ambiguous default behavior.",
-        "When product fetching errors, the UI can display an error state and the user can trigger a refetch.",
-        "No console-only failures: product lookup failures are surfaced in the modal UI in a user-actionable way."
+        "A new static asset file is added under the frontend public assets (use the standard IC well-known location) containing newline-separated domains including `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`.",
+        "After building the frontend, the `ic-domains` file is present in the final canister assets at `/.well-known/ic-domains` (or the IC-supported path used by the asset canister) and returns the expected contents when fetched.",
+        "No changes are made to any frontend immutable paths listed in SYSTEM_CONTEXT."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Update repository documentation to include the exact post-deploy steps required to activate the apex/root custom domain on the ICP gateway, including a separate POST registration for `myrepubicnetwork.web.id` (in addition to any existing `www` registration), and explicitly call out that a redeploy is required after updating `ic-domains`.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Deploy ulang",
+          "Register root domain via POST (curl) secara terpisah"
+        ]
+      },
+      "acceptanceCriteria": [
+        "`frontend/docs/custom-domain.md` is updated to include a clear section for enabling the apex/root domain, including: (1) add domain to `ic-domains`, (2) redeploy the frontend canister, (3) run `curl -X POST -H 'Content-Type: application/json' https://icp0.io/registrations --data '{\"name\": \"myrepubicnetwork.web.id\"}'` as a separate step.",
+        "Documentation also includes the analogous POST registration command for `www.myrepubicnetwork.web.id` (if not already present) and clarifies that `www` and apex are separate registrations.",
+        "Documentation includes a verification step using `https://icp0.io/registrations/<id>` to check status (e.g., pending/available/failed)."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under frontend/src/components/ui or any other path listed in frontend.immutablePaths.",
-    "Keep the backend as a single-actor Motoko canister; do not introduce additional backend services.",
-    "Do not add database dependencies or external services."
+    "Backend must remain a single Motoko actor; no multi-canister backend changes.",
+    "Do not modify files under frontend immutablePaths (SYSTEM_CONTEXT)."
   ],
   "nonGoals": [
-    "Do not redesign unrelated pages or change the overall onboarding/verification logic.",
-    "Do not change backend product initialization policy (e.g., do not require admins to reinitialize products) unless strictly necessary for correctness."
+    "Do not implement DNS provider automation or Cloudflare API integration.",
+    "Do not add new authentication methods beyond Internet Identity.",
+    "Do not change canonical domain behavior already implemented in frontend/index.html unless required for the apex domain activation."
   ],
   "imageRequirements": {
     "required": [],

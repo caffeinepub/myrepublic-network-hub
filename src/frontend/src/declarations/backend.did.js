@@ -197,6 +197,7 @@ export const idlService = IDL.Service({
   'approveMembershipRequest' : IDL.Func([IDL.Nat], [], []),
   'approveWithdrawal' : IDL.Func([WithdrawalId], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'bootstrapDefaultInternetPackagesIfEmpty' : IDL.Func([], [IDL.Nat], []),
   'createPurchase' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Nat], [], []),
   'getAchievements' : IDL.Func([MemberId], [IDL.Vec(Achievement)], ['query']),
   'getAllByStatus' : IDL.Func(
@@ -545,6 +546,7 @@ export const idlFactory = ({ IDL }) => {
     'approveMembershipRequest' : IDL.Func([IDL.Nat], [], []),
     'approveWithdrawal' : IDL.Func([WithdrawalId], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'bootstrapDefaultInternetPackagesIfEmpty' : IDL.Func([], [IDL.Nat], []),
     'createPurchase' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
         [],
