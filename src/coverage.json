@@ -1,18 +1,29 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T04:09:08.009Z",
+  "generatedAt": "2026-02-07T05:15:15.998Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
-        "id": "REQ-3",
-        "summary": "Add an `ic-domains` allowlist file to the frontend assets so the deployed frontend canister explicitly serves both the apex and www hostnames: `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`. The file must be included in the built static assets so it is available from the frontend canister at runtime.",
+        "id": "REQ-5",
+        "summary": "Remove all custom-domain canonical behavior so the app is no longer tied to `myrepubicnetwork.web.id` and can be used normally on the default URL `https://myrepublic-tuk.caffeine.xyz`. Update `frontend/index.html` to (1) remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and (2) set the `<link rel='canonical'>` and `og:url` values to `https://myrepublic-tuk.caffeine.xyz`.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/index.html"
+        ],
+        "matchedFiles": [
+          "frontend/index.html"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`) so the frontend canister is not configured to serve that custom domain.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/public/.well-known/ic-domains"
@@ -22,8 +33,8 @@
         ]
       },
       {
-        "id": "REQ-4",
-        "summary": "Update repository documentation to include the exact post-deploy steps required to activate the apex/root custom domain on the ICP gateway, including a separate POST registration for `myrepubicnetwork.web.id` (in addition to any existing `www` registration), and explicitly call out that a redeploy is required after updating `ic-domains`.",
+        "id": "REQ-7",
+        "summary": "Remove custom-domain documentation from the repository by deleting `frontend/docs/custom-domain.md` (or replacing it with a brief note stating the project uses the default Caffeine URL only: `https://myrepublic-tuk.caffeine.xyz`).",
         "status": "implemented",
         "plannedFiles": [
           "frontend/docs/custom-domain.md"
@@ -36,11 +47,11 @@
   },
   "changedFiles": [
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/docs/custom-domain.md",
+    "frontend/index.html",
     "frontend/public/.well-known/ic-domains",
     "project_state.json",
     "scratch/component-selection.json",

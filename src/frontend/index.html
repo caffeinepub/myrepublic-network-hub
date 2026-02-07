@@ -4,30 +4,11 @@
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
         <title>MyRepublic Network Hub</title>
         <link rel='icon' type='image/png' href='/assets/generated/myrepublic-network-hub-logo-transparent.dim_200x200.png' />
-        <link rel='canonical' href='https://myrepubicnetwork.web.id' />
-        <meta property='og:url' content='https://myrepubicnetwork.web.id' />
+        <link rel='canonical' href='https://myrepublic-tuk.caffeine.xyz' />
+        <meta property='og:url' content='https://myrepublic-tuk.caffeine.xyz' />
         <meta property='og:title' content='MyRepublic Network Hub' />
         <meta property='og:description' content='Internet Cepat & Stabil - Paket Internet MyRepublic dengan Gratis Instalasi' />
         <meta property='og:type' content='website' />
-        <script>
-            // Canonical domain redirect - runs before app loads
-            (function() {
-                const CANONICAL_DOMAIN = 'myrepubicnetwork.web.id';
-                const LOCAL_HOSTS = ['localhost', '127.0.0.1'];
-                const currentHost = window.location.hostname;
-                
-                // Skip redirect for local development
-                if (LOCAL_HOSTS.includes(currentHost)) {
-                    return;
-                }
-                
-                // Redirect to canonical domain if not already there
-                if (currentHost !== CANONICAL_DOMAIN) {
-                    const canonicalUrl = 'https://' + CANONICAL_DOMAIN + window.location.pathname + window.location.search + window.location.hash;
-                    window.location.replace(canonicalUrl);
-                }
-            })();
-        </script>
     </head>
     <body>
         <div id='root'></div>

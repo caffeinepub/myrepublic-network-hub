@@ -1,57 +1,83 @@
 {
   "kind": "build_request",
-  "title": "Enable apex custom domain by adding myrepubicnetwork.web.id to ic-domains and documenting redeploy + gateway registration",
+  "title": "Remove custom domain configuration and use default Caffeine URL only",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-3",
-      "text": "Add an `ic-domains` allowlist file to the frontend assets so the deployed frontend canister explicitly serves both the apex and www hostnames: `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`. The file must be included in the built static assets so it is available from the frontend canister at runtime.",
+      "id": "REQ-5",
+      "text": "Remove all custom-domain canonical behavior so the app is no longer tied to `myrepubicnetwork.web.id` and can be used normally on the default URL `https://myrepublic-tuk.caffeine.xyz`. Update `frontend/index.html` to (1) remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and (2) set the `<link rel='canonical'>` and `og:url` values to `https://myrepublic-tuk.caffeine.xyz`.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Tambah myrepubicnetwork.web.id ke file ic-domains di canister"
+          "iya saya ingin proyek tanpa domain,  tetap memakai link default: https://myrepublic-tuk.caffeine.xyz"
         ]
       },
       "acceptanceCriteria": [
-        "A new static asset file is added under the frontend public assets (use the standard IC well-known location) containing newline-separated domains including `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`.",
-        "After building the frontend, the `ic-domains` file is present in the final canister assets at `/.well-known/ic-domains` (or the IC-supported path used by the asset canister) and returns the expected contents when fetched.",
-        "No changes are made to any frontend immutable paths listed in SYSTEM_CONTEXT."
+        "Opening the app on any hostname (e.g., an `*.icp0.io` gateway URL or the default Caffeine URL) does not redirect to `myrepubicnetwork.web.id`.",
+        "`frontend/index.html` canonical link equals `https://myrepublic-tuk.caffeine.xyz`.",
+        "`frontend/index.html` Open Graph `og:url` equals `https://myrepublic-tuk.caffeine.xyz`."
       ]
     },
     {
-      "id": "REQ-4",
-      "text": "Update repository documentation to include the exact post-deploy steps required to activate the apex/root custom domain on the ICP gateway, including a separate POST registration for `myrepubicnetwork.web.id` (in addition to any existing `www` registration), and explicitly call out that a redeploy is required after updating `ic-domains`.",
+      "id": "REQ-6",
+      "text": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`) so the frontend canister is not configured to serve that custom domain.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Deploy ulang",
-          "Register root domain via POST (curl) secara terpisah"
+          "iya saya ingin proyek tanpa domain,  tetap memakai link default: https://myrepublic-tuk.caffeine.xyz"
         ]
       },
       "acceptanceCriteria": [
-        "`frontend/docs/custom-domain.md` is updated to include a clear section for enabling the apex/root domain, including: (1) add domain to `ic-domains`, (2) redeploy the frontend canister, (3) run `curl -X POST -H 'Content-Type: application/json' https://icp0.io/registrations --data '{\"name\": \"myrepubicnetwork.web.id\"}'` as a separate step.",
-        "Documentation also includes the analogous POST registration command for `www.myrepubicnetwork.web.id` (if not already present) and clarifies that `www` and apex are separate registrations.",
-        "Documentation includes a verification step using `https://icp0.io/registrations/<id>` to check status (e.g., pending/available/failed)."
+        "The built frontend assets do not include an `/.well-known/ic-domains` file that lists `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`.",
+        "No project configuration remains that explicitly enables serving `myrepubicnetwork.web.id` via the IC gateway."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Remove custom-domain documentation from the repository by deleting `frontend/docs/custom-domain.md` (or replacing it with a brief note stating the project uses the default Caffeine URL only: `https://myrepublic-tuk.caffeine.xyz`).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "iya saya ingin proyek tanpa domain,  tetap memakai link default: https://myrepublic-tuk.caffeine.xyz"
+        ]
+      },
+      "acceptanceCriteria": [
+        "There is no documentation instructing users to configure or register `myrepubicnetwork.web.id` for this project.",
+        "If any replacement documentation remains, it clearly states the app is used via `https://myrepublic-tuk.caffeine.xyz` and does not include ICP gateway registration/DNS steps."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor; no multi-canister backend changes.",
-    "Do not modify files under frontend immutablePaths (SYSTEM_CONTEXT)."
+    "Do not modify any files under `frontend/src/components/ui` (compose components instead).",
+    "Do not edit immutable frontend paths listed in SYSTEM_CONTEXT (e.g., `frontend/src/hooks/useInternetIdentity.ts(x)`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`).",
+    "Backend remains single-actor; no backend changes are required for this request."
   ],
   "nonGoals": [
-    "Do not implement DNS provider automation or Cloudflare API integration.",
-    "Do not add new authentication methods beyond Internet Identity.",
-    "Do not change canonical domain behavior already implemented in frontend/index.html unless required for the apex domain activation."
+    "Do not change or reset Cloudflare/DNS settings (out of scope; user asked to change project configuration only).",
+    "Do not register or deregister domains with the ICP gateway (external action).",
+    "Do not delete or modify IC canisters or on-chain state."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 19,
-  "summary": "MyRepublic Network Hub adalah dApp ICP (Motoko backend + React/Tailwind frontend) untuk program member/referral MyRepublic, termasuk autentikasi Internet Identity, registrasi & profil detail, visualisasi network tree, transaksi komisi/bonus, dan penarikan dana; admin mengelola produk, member, leaderboard, dan proses withdrawal. Arah bisnis diperbarui: skema komisi referral pembelian pertama menjadi 25% dari harga produk untuk referrer, dan member baru dapat langsung merekrut tanpa harus menunggu status verifikasi langganan. Selain kebutuhan domain kustom, scope domain diperluas: mengaktifkan juga apex/root domain `myrepubicnetwork.web.id` (tanpa www) via `ic-domains`, redeploy, dan registrasi terpisah ke ICP gateway (POST).",
+  "projectStateVersion": 21,
+  "summary": "MyRepublic Network Hub adalah dApp ICP (Motoko backend + React/Tailwind frontend) untuk program member/referral MyRepublic, termasuk autentikasi Internet Identity, registrasi & profil detail, visualisasi network tree, transaksi komisi/bonus, dan penarikan dana; admin mengelola produk, member, leaderboard, dan proses withdrawal. Arah bisnis diperbarui: skema komisi referral pembelian pertama menjadi 25% dari harga produk untuk referrer, dan member baru dapat langsung merekrut tanpa harus menunggu status verifikasi langganan. Scope domain direvisi: proyek TIDAK menggunakan custom domain dan tetap memakai link default https://myrepublic-tuk.caffeine.xyz (tanpa konfigurasi `ic-domains`, tanpa canonical redirect/OG URL custom, dan tanpa dokumentasi/steps domain ICP gateway).",
   "architectural_notes": [
     "Frontend uses React + @tanstack/react-query with a dedicated hooks layer (useQueries.ts) to wrap all canister calls, with query-key based caching and targeted invalidation after mutations.",
     "Internet Identity authentication is wrapped in a context provider (useInternetIdentity) that initializes AuthClient, persists delegation, and exposes login/logout state to the app.",
@@ -334,6 +334,30 @@
         "REQ-4"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-remove-all-custom-domain-canonical-behavior-so-the-app-is-no-longer-tied-to-myrepubicnetwork-web-id-and-can-be-used-normally-on-the-default-url-https-myrepublic-tuk-caffeine-xyz-update-frontend-index-html-to-1-remove-the-pre-load-canonical-redirect-script-that-forces-myrepubicnetwork-web-id-and-2-set-the-link-rel-canonical-and-og-url-values-to-https-myrepublic-tuk-caffeine-xyz",
+      "title": "Remove all custom-domain canonical behavior so the app is no longer tied to `myrepubicnetwork.web.id` and can be used normally on the default URL `https://myrepublic-tuk.caffeine.xyz`. Update `frontend/index.html` to (1) remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and (2) set the `<link rel='canonical'>` and `og:url` values to `https://myrepublic-tuk.caffeine.xyz`.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-ic-custom-domain-allowlist-file-for-myrepubicnetwork-web-id-by-deleting-frontend-public-well-known-ic-domains-or-ensuring-it-no-longer-includes-myrepubicnetwork-web-id-or-www-myrepubicnetwork-web-id-so-the-frontend-canister-is-not-configured-to-serve-that-custom-domain",
+      "title": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`) so the frontend canister is not configured to serve that custom domain.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-custom-domain-documentation-from-the-repository-by-deleting-frontend-docs-custom-domain-md-or-replacing-it-with-a-brief-note-stating-the-project-uses-the-default-caffeine-url-only-https-myrepublic-tuk-caffeine-xyz",
+      "title": "Remove custom-domain documentation from the repository by deleting `frontend/docs/custom-domain.md` (or replacing it with a brief note stating the project uses the default Caffeine URL only: `https://myrepublic-tuk.caffeine.xyz`).",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -358,18 +382,6 @@
     {
       "id": "AR-4",
       "summary": "Allow newly subscribed members to recruit immediately (remove/relax subscriptionsVerified gating for sponsoring/recruiting)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Configure custom domain myrepubicnetwork.web.id for the web app (DNS + SSL/TLS + redirect/canonical domain)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Enable apex/root domain `myrepubicnetwork.web.id` (tanpa www): add to `ic-domains`, redeploy, and register root domain via separate ICP gateway POST registration",
       "reqIds": [],
       "status": "pending"
     }

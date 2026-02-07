@@ -1,11 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Enable the ICP HTTP gateway to serve the frontend from the apex (root) custom domain by allowlisting `myrepubicnetwork.web.id`, and document the exact redeploy + gateway registration steps for both apex and `www`.
+**Goal:** Remove all custom-domain configuration/behavior and use the default Caffeine URL (`https://myrepublic-tuk.caffeine.xyz`) as the only canonical URL.
 
 **Planned changes:**
-- Add a static `ic-domains` allowlist file under the standard IC well-known public assets location containing newline-separated domains: `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`, and ensure it is included in the built frontend canister assets.
-- Update `frontend/docs/custom-domain.md` with post-deploy instructions to: add domains to `ic-domains`, redeploy the frontend canister, and register both apex and `www` via separate `curl -X POST ... /registrations` commands.
-- Add a documentation verification step to check registration status via `https://icp0.io/registrations/<id>`.
+- Update `frontend/index.html` to remove any pre-load canonical redirect script that forces `myrepubicnetwork.web.id`.
+- Update `frontend/index.html` to set the canonical link (`<link rel="canonical">`) and Open Graph `og:url` to `https://myrepublic-tuk.caffeine.xyz`.
+- Remove the IC custom domain allowlist by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer lists `myrepubicnetwork.web.id` / `www.myrepubicnetwork.web.id`).
+- Remove custom-domain documentation by deleting `frontend/docs/custom-domain.md` or replacing it with a brief note that only the default Caffeine URL is used.
 
-**User-visible outcome:** The deployed frontend canister can be served via both `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id` once the documented redeploy and gateway registration steps are completed.
+**User-visible outcome:** The app can be opened on the default Caffeine URL or any gateway hostname without redirecting to `myrepubicnetwork.web.id`, and sharing/SEO metadata points to `https://myrepublic-tuk.caffeine.xyz`.

@@ -2,8 +2,29 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-an-ic-domains-allowlist-file-to-the-frontend-assets-so-the-deployed-frontend-canister-explicitly-serves-both-the-apex-and-www-hostnames-myrepubicnetwork-web-id-and-www-myrepubicnetwork-web-id-the-file-must-be-included-in-the-built-static-assets-so-it-is-available-from-the-frontend-canister-at-runtime",
-      "featureTitle": "Add an `ic-domains` allowlist file to the frontend assets so the deployed frontend canister explicitly serves both the apex and www hostnames: `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`. The file must be included in the built static assets so it is available from the frontend canister at runtime.",
+      "featureId": "feature-remove-all-custom-domain-canonical-behavior-so-the-app-is-no-longer-tied-to-myrepubicnetwork-web-id-and-can-be-used-normally-on-the-default-url-https-myrepublic-tuk-caffeine-xyz-update-frontend-index-html-to-1-remove-the-pre-load-canonical-redirect-script-that-forces-myrepubicnetwork-web-id-and-2-set-the-link-rel-canonical-and-og-url-values-to-https-myrepublic-tuk-caffeine-xyz",
+      "featureTitle": "Remove all custom-domain canonical behavior so the app is no longer tied to `myrepubicnetwork.web.id` and can be used normally on the default URL `https://myrepublic-tuk.caffeine.xyz`. Update `frontend/index.html` to (1) remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and (2) set the `<link rel='canonical'>` and `og:url` values to `https://myrepublic-tuk.caffeine.xyz`.",
+      "files": [
+        "frontend/index.html"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "http-outcalls@3.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-remove-the-ic-custom-domain-allowlist-file-for-myrepubicnetwork-web-id-by-deleting-frontend-public-well-known-ic-domains-or-ensuring-it-no-longer-includes-myrepubicnetwork-web-id-or-www-myrepubicnetwork-web-id-so-the-frontend-canister-is-not-configured-to-serve-that-custom-domain",
+      "featureTitle": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`) so the frontend canister is not configured to serve that custom domain.",
       "files": [
         "frontend/public/.well-known/ic-domains"
       ],
@@ -18,13 +39,13 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-6"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-repository-documentation-to-include-the-exact-post-deploy-steps-required-to-activate-the-apex-root-custom-domain-on-the-icp-gateway-including-a-separate-post-registration-for-myrepubicnetwork-web-id-in-addition-to-any-existing-www-registration-and-explicitly-call-out-that-a-redeploy-is-required-after-updating-ic-domains",
-      "featureTitle": "Update repository documentation to include the exact post-deploy steps required to activate the apex/root custom domain on the ICP gateway, including a separate POST registration for `myrepubicnetwork.web.id` (in addition to any existing `www` registration), and explicitly call out that a redeploy is required after updating `ic-domains`.",
+      "featureId": "feature-remove-custom-domain-documentation-from-the-repository-by-deleting-frontend-docs-custom-domain-md-or-replacing-it-with-a-brief-note-stating-the-project-uses-the-default-caffeine-url-only-https-myrepublic-tuk-caffeine-xyz",
+      "featureTitle": "Remove custom-domain documentation from the repository by deleting `frontend/docs/custom-domain.md` (or replacing it with a brief note stating the project uses the default Caffeine URL only: `https://myrepublic-tuk.caffeine.xyz`).",
       "files": [
         "frontend/docs/custom-domain.md"
       ],
@@ -39,7 +60,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-4"
+        "REQ-7"
       ],
       "confidence": "high"
     }

@@ -1,37 +1,51 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add ic-domains allowlist asset and document apex + www ICP gateway registration steps",
+  "title": "Remove custom domain configuration and use default Caffeine URL only",
   "requirements": [
     {
-      "id": "REQ-3",
-      "summary": "Add IC well-known ic-domains allowlist asset serving apex and www hostnames",
+      "id": "REQ-5",
+      "summary": "Remove canonical redirect behavior tied to myrepubicnetwork.web.id and set canonical/og:url to the default Caffeine URL.",
       "acceptanceCriteria": [
-        "A new static asset file is added under the frontend public assets (use the standard IC well-known location) containing newline-separated domains including `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`.",
-        "After building the frontend, the `ic-domains` file is present in the final canister assets at `/.well-known/ic-domains` (or the IC-supported path used by the asset canister) and returns the expected contents when fetched.",
-        "No changes are made to any frontend immutable paths listed in SYSTEM_CONTEXT."
+        "Opening the app on any hostname (e.g., an `*.icp0.io` gateway URL or the default Caffeine URL) does not redirect to `myrepubicnetwork.web.id`.",
+        "`frontend/index.html` canonical link equals `https://myrepublic-tuk.caffeine.xyz`.",
+        "`frontend/index.html` Open Graph `og:url` equals `https://myrepublic-tuk.caffeine.xyz`."
       ],
       "file_operations": [
         {
-          "path": "frontend/public/.well-known/ic-domains",
-          "operation": "create",
-          "description": "Create the IC well-known allowlist file with newline-separated hostnames: `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`, so it is bundled into the built static assets and served by the frontend canister at runtime."
+          "path": "frontend/index.html",
+          "operation": "modify",
+          "description": "Remove the pre-load canonical redirect script that forces `myrepubicnetwork.web.id`, and update the `<link rel='canonical'>` and Open Graph `og:url` to `https://myrepublic-tuk.caffeine.xyz`."
         }
       ]
     },
     {
-      "id": "REQ-4",
-      "summary": "Update custom-domain documentation with required redeploy + separate apex and www ICP gateway registrations and verification",
+      "id": "REQ-6",
+      "summary": "Remove IC custom domain allowlist configuration for myrepubicnetwork.web.id.",
       "acceptanceCriteria": [
-        "`frontend/docs/custom-domain.md` is updated to include a clear section for enabling the apex/root domain, including: (1) add domain to `ic-domains`, (2) redeploy the frontend canister, (3) run `curl -X POST -H 'Content-Type: application/json' https://icp0.io/registrations --data '{\"name\": \"myrepubicnetwork.web.id\"}'` as a separate step.",
-        "Documentation also includes the analogous POST registration command for `www.myrepubicnetwork.web.id` (if not already present) and clarifies that `www` and apex are separate registrations.",
-        "Documentation includes a verification step using `https://icp0.io/registrations/<id>` to check status (e.g., pending/available/failed)."
+        "The built frontend assets do not include an `/.well-known/ic-domains` file that lists `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`.",
+        "No project configuration remains that explicitly enables serving `myrepubicnetwork.web.id` via the IC gateway."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/.well-known/ic-domains",
+          "operation": "delete",
+          "description": "Delete the IC custom domain allowlist file so it no longer enables `myrepubicnetwork.web.id` (or `www.myrepubicnetwork.web.id`) to be served by the frontend canister."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Remove custom-domain documentation from the repository or replace it with a default-URL-only note.",
+      "acceptanceCriteria": [
+        "There is no documentation instructing users to configure or register `myrepubicnetwork.web.id` for this project.",
+        "If any replacement documentation remains, it clearly states the app is used via `https://myrepublic-tuk.caffeine.xyz` and does not include ICP gateway registration/DNS steps."
       ],
       "file_operations": [
         {
           "path": "frontend/docs/custom-domain.md",
-          "operation": "modify",
-          "description": "Expand/repair the guide to include an explicit section for enabling the apex/root custom domain on the ICP gateway: (1) add apex + www to `/.well-known/ic-domains`, (2) redeploy the frontend canister after updating the file, (3) run separate `curl -X POST ...` registrations for `myrepubicnetwork.web.id` and `www.myrepubicnetwork.web.id`, and (4) add a verification step using `https://icp0.io/registrations/<id>` to check status."
+          "operation": "delete",
+          "description": "Delete the custom-domain setup documentation so the repository no longer instructs users to configure or register `myrepubicnetwork.web.id`."
         }
       ]
     }

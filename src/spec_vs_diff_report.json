@@ -1,44 +1,54 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T04:09:08.006Z",
-  "summary": "REQ-3 appears implemented by adding a new static allowlist file at the IC well-known location with both apex and www domains. REQ-4 cannot be fully verified from the provided diff excerpt because the updated documentation content is truncated before showing the required redeploy, POST registration commands, and verification steps. The diff also includes many unrelated frontend feature/UI changes that were not requested by the BuildRequest.",
+  "generatedAt": "2026-02-07T05:15:15.995Z",
+  "summary": "REQ-5 appears implemented via updating frontend/index.html canonical and og:url to the default Caffeine URL and removing any visible custom-domain redirect script. REQ-6 and REQ-7 cannot be confirmed from the diff summary because the relevant file contents are not shown and the files were not deleted (only modified). The diff also includes substantial unrelated UI/feature work not requested in the BuildRequest.",
   "missing_requirements": [
     {
-      "id": "REQ-4",
-      "requirement": "Documentation must include explicit post-deploy steps for apex domain activation on the ICP gateway: (1) add domain to ic-domains, (2) redeploy frontend canister, (3) run a separate curl POST registration for myrepubicnetwork.web.id; also include the analogous www POST command, clarify apex vs www are separate registrations, and include a verification step using https://icp0.io/registrations/<id>.",
-      "reason": "The updated frontend/docs/custom-domain.md is truncated in the diff summary right after introducing the ic-domains file, so the required explicit redeploy step, curl POST commands (apex and www), and the registrations/<id> verification step are not visible and cannot be confirmed as implemented.",
+      "id": "REQ-6",
+      "requirement": "Remove the IC custom domain allowlist file for `myrepubicnetwork.web.id` by deleting `frontend/public/.well-known/ic-domains` (or ensuring it no longer includes `myrepubicnetwork.web.id` or `www.myrepubicnetwork.web.id`).",
+      "reason": "The diff indicates `frontend/public/.well-known/ic-domains` was modified, but the content is not included in the summary, so it's not verifiable that the file was deleted or that it no longer lists the custom domains.",
       "evidence": [
-        "frontend/docs/custom-domain.md (truncated after 'Ensure the file `frontend/public/.well-known/ic-domains` exists and contains:')"
+        "frontend/public/.well-known/ic-domains"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Remove custom-domain documentation by deleting `frontend/docs/custom-domain.md` or replacing it with a brief note stating the project uses only `https://myrepublic-tuk.caffeine.xyz` and does not include ICP gateway registration/DNS steps.",
+      "reason": "`frontend/docs/custom-domain.md` is shown as modified (not deleted) and its updated contents are not provided, so it cannot be verified that custom-domain instructions were removed or replaced with the required brief note.",
+      "evidence": [
+        "frontend/docs/custom-domain.md"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Large set of unrelated frontend feature and UI changes (routing/role-based protection, profile completion modal workflow, product bootstrapping hooks, redesigned header/footer, new/updated pages, network visualization, Tailwind/neon styling changes, purchase modal wording/logic, etc.).",
-      "reason": "BuildRequest only asks to add an ic-domains allowlist asset and update custom-domain documentation; it explicitly constrains scope and does not request broader frontend functionality or styling changes.",
+      "description": "Large-scale frontend feature/UI changes (routing, role-based protections, new profile completion modal workflow, new/changed pages, network visualization, purchase modal text changes, styling/theme overhaul, Tailwind config updates).",
+      "reason": "The BuildRequest only asks to remove custom-domain configuration/canonical behavior and related docs/allowlist; it explicitly says no backend changes required and does not request broad UI/feature redesigns.",
       "evidence": [
-        "frontend-file-summaries.txt: frontend/src/App.tsx",
-        "frontend-file-summaries.txt: frontend/src/hooks/useQueries.ts",
-        "frontend-file-summaries.txt: frontend/src/components/Header.tsx",
-        "frontend-file-summaries.txt: frontend/src/components/Footer.tsx",
-        "frontend-file-summaries.txt: frontend/src/components/ProfileSetupModal.tsx",
-        "frontend-file-summaries.txt: frontend/src/pages/HomePage.tsx",
-        "frontend-file-summaries.txt: frontend/src/pages/JoinPage.tsx",
-        "frontend-file-summaries.txt: frontend/src/pages/NetworkPage.tsx",
-        "frontend-file-summaries.txt: frontend/src/pages/DashboardPage.tsx",
-        "frontend-file-summaries.txt: frontend/src/pages/AdminDashboardPage.tsx",
-        "frontend-file-summaries.txt: frontend/src/components/NetworkTreeVisualization.tsx",
-        "frontend-file-summaries.txt: frontend/src/index.css",
-        "frontend-file-summaries.txt: frontend/tailwind.config.js",
-        "frontend-file-summaries.txt: frontend/src/components/PurchaseModal.tsx"
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Added/changed React Query hooks including a mutation to bootstrap default products, and multiple page behaviors relying on default product bootstrapping.",
+      "reason": "Not requested by REQ-5/REQ-6/REQ-7; unrelated to removing custom domain configuration.",
+      "evidence": [
+        "frontend-file-summaries.txt (frontend/src/hooks/useQueries.ts, frontend/src/pages/HomePage.tsx, frontend/src/pages/AdminDashboardPage.tsx)"
+      ]
+    },
+    {
+      "description": "Project metadata/state update describing business logic and commission scheme changes and revised domain scope.",
+      "reason": "The BuildRequest does not request updating `project_state.json` or changing business/commission logic; only domain configuration/documentation changes were requested.",
+      "evidence": [
+        "project_state.json"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.68,
   "changed_files": [
     "frontend-file-summaries.txt",
     "frontend/docs/custom-domain.md",
+    "frontend/index.html",
     "frontend/public/.well-known/ic-domains",
     "project_state.json"
   ]
